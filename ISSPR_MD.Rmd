@@ -16,6 +16,8 @@ In this chunk we'll load the data.
 ```{r}
 load("ISSPR_final_cleaned_data_new.rda")
 str(ISSPR_data_without_overlap_metrics)
+# check completeness of sessions
+table(ISSPR_data_without_overlap_metrics$subj_id.x, ISSPR_data_without_overlap_metrics$session_nr)
 ```
 
 Here we will load the needed libraries
@@ -86,12 +88,6 @@ ocimTheme <- function(base_size=15, base_family="Helvetica") {
     )
 }
 
-
-#path_to_ISSPR <- "C:/Users/dreid/OneDrive/Dokumente/Masterarbeit/ISSPR R Studio"
-#source(file.path(path_to_ISSPR, "microsacc.R"))
-#source(file.path(path_to_ISSPR,"vecvel.R"))
-#source(file.path(path_to_ISSPR, "check_for_sac_clustering.R"))
-#source(file.path(path_to_ISSPR, "check_for_PSO.R"))
 
 scr.ppd <- 20.5652
 

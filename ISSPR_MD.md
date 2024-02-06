@@ -114,6 +114,34 @@ str(ISSPR_data_without_overlap_metrics)
     ##  - attr(*, ".internal.selfref")=<externalptr> 
     ##  - attr(*, "sorted")= chr "replay_ID"
 
+``` r
+# check completeness of sessions
+table(ISSPR_data_without_overlap_metrics$subj_id.x, ISSPR_data_without_overlap_metrics$session_nr)
+```
+
+    ##     
+    ##        1   2
+    ##   08 774 792
+    ##   11 803 802
+    ##   12 806 777
+    ##   13 781 782
+    ##   15 802 809
+    ##   16 790 795
+    ##   17 741 782
+    ##   18 781 793
+    ##   19 782 789
+    ##   20 789 797
+    ##   21 803 800
+    ##   22 786 793
+    ##   P1 799 808
+    ##   P2 803 804
+    ##   P3 723 746
+    ##   P4 792 803
+    ##   P5 783 768
+    ##   P6 795 805
+    ##   P7 785 809
+    ##   P9 769 776
+
 Here we will load the needed libraries
 
 ``` r
@@ -185,12 +213,6 @@ ocimTheme <- function(base_size=15, base_family="Helvetica") {
 }
 
 
-#path_to_ISSPR <- "C:/Users/dreid/OneDrive/Dokumente/Masterarbeit/ISSPR R Studio"
-#source(file.path(path_to_ISSPR, "microsacc.R"))
-#source(file.path(path_to_ISSPR,"vecvel.R"))
-#source(file.path(path_to_ISSPR, "check_for_sac_clustering.R"))
-#source(file.path(path_to_ISSPR, "check_for_PSO.R"))
-
 scr.ppd <- 20.5652
 
 experiment_colorscale <- c('#1b9e77','#d95f02','#7570b3')
@@ -219,7 +241,6 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
 ```
 
     ##     subj_id.x prop_correct
-    ##        <char>        <num>
     ##  1:        P3    0.7760381
     ##  2:        15    0.6921167
     ##  3:        19    0.6021642
@@ -240,7 +261,6 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
     ## 18:        P5    0.6557060
     ## 19:        P4    0.7485893
     ## 20:        P9    0.8330097
-    ##     subj_id.x prop_correct
 
 ``` r
 prop_correct_subj_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)), by = .(subj_id.x, sac_suppression_f, stim_dur)][order(subj_id.x, sac_suppression_f, stim_dur)]
@@ -476,8 +496,8 @@ ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may
-    ## be inaccurate.
+    ## of the full design, you must use the "within_full" argument, else results may be
+    ## inaccurate.
 
     ##   stim_dur  N     Mean        SD      FLSD
     ## 1     8.33 20 8.845138 0.1726913 0.1168101
@@ -499,8 +519,8 @@ ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may
-    ## be inaccurate.
+    ## of the full design, you must use the "within_full" argument, else results may be
+    ## inaccurate.
 
     ##   stim_dur  N     Mean        SD      FLSD
     ## 1     8.33 20 59.94793 0.8543478 0.6507833
@@ -522,8 +542,8 @@ anov_replay_sac_dur <- ezANOVA(data = ISSPR_data_without_overlap_metrics[experim
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may
-    ## be inaccurate.
+    ## of the full design, you must use the "within_full" argument, else results may be
+    ## inaccurate.
 
 Here we will figure out the effect of suppression and the task
 
