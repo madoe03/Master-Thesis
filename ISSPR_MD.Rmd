@@ -339,22 +339,29 @@ Here we will have two dimensions (saccade duration and saccade amplitude) for ea
 by mean 
 ```{r}
 ISSPR_data_without_overlap_metrics[, sac_amp_n := cut_number(sac_amp, n=10)]
-ISSPR_data_without_overlap_metrics[, sac_dur_bins := cut_number(sac_dur, n=6)]
+ISSPR_data_without_overlap_metrics[, sac_dur_bins := cut_number(sac_dur, n=2)]
+table(ISSPR_data_without_overlap_metrics$subj_id.x, 
+      ISSPR_data_without_overlap_metrics$sac_dur_bins)
 
-
-metrics_subj_bins_replay_dur <- ISSPR_data_without_overlap_metrics[ , .(sac_dur_f = mean(sac_dur), sac_amp_f= mean(sac_amp)),
-                                                                by = .(subj_id.x, sac_amp_n)]
-
+metrics_subj_bins_replay_dur <- ISSPR_data_without_overlap_metrics[ , .(sac_dur_f = mean(sac_dur), 
+                                                                        disp_off_re_sac_off = mean(replay_sac_display_off_latency), 
+                                                                        correct = mean(correct)),
+                                                                by = .(subj_id.x, sac_dur_bins, stim_dur)]
+metrics_subj_bins_replay_dur[ , sac_dur_f2 := mean(sac_dur_f), by = .(subj_id.x, sac_dur_bins)]
 ```
 Here is the plot of sac_dur and sac_amp 
 ```{r}
 ggplot(data = metrics_subj_bins_replay_dur, 
-       aes(x = sac_amp_f, y = sac_dur_f,
-           color = sac_amp_f )) + 
+       aes(x = disp_off_re_sac_off, 
+           #x = as.numeric(stim_dur),
+           y = correct,
+           color = sac_dur_f, group = sac_dur_f2 )) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  geom_vline(xintercept = 0, linetype = "dotted") + 
   geom_point() + geom_line() + 
   theme_classic() + 
-  labs(x = "Saccade amplitude", y = "Saccade duration", 
-       color = "Sac Amp", fill = "Sac Amp")+ 
+  labs(x = "Display offset re saccade offset", y = "Proportion correct", 
+       color = "Sacc. duration") + 
   facet_wrap(~subj_id.x)
 
 ```
