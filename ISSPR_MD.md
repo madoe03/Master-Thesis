@@ -142,6 +142,13 @@ table(ISSPR_data_without_overlap_metrics$subj_id.x, ISSPR_data_without_overlap_m
     ##   P7 785 809
     ##   P9 769 776
 
+Here we load the data from Experiment 1-3
+
+``` r
+load("~/Masterarbeit/ISSPR R Studio/ISSP_cleaned_data (1).rda")
+View(issp)
+```
+
 Here we will load the needed libraries
 
 ``` r
@@ -233,6 +240,43 @@ ISSPR_data_without_overlap_metrics[ , stim_dur := as.numeric(as.character(stim_d
 ISSPR_data_without_overlap_metrics[ , stim_dur := ordered(round(stim_dur, 2))]
 ```
 
+Here we start with the common_subj_id for Experiment 2 und Reply
+Experiment
+
+``` r
+#first we will have the three P. which were tested for Experiment 1 and 2; Reply
+issp[experiment==2 & subj_id=="10", common_subj_id := "1"]
+issp[experiment==1 & subj_id=="20", common_subj_id := "1"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="2", common_subj_id := "1"]
+
+issp[experiment==2 & subj_id=="20", common_subj_id := "2"]
+issp[experiment==1 & subj_id=="19", common_subj_id := "2"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="3", common_subj_id := "2"]
+
+issp[experiment==2 & subj_id=="15", common_subj_id := "3"]
+issp[experiment==1 & subj_id=="23", common_subj_id := "3"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="7", common_subj_id := "3"]
+
+# here we create only for P. which were included for Experiment 2 and Reply
+issp[experiment==2 & subj_id=="3", common_subj_id := "4"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="5", common_subj_id := "4"]
+
+issp[experiment==2 & subj_id=="1", common_subj_id := "5"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="1", common_subj_id := "5"]
+
+issp[experiment==2 & subj_id=="11", common_subj_id := "6"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="4", common_subj_id := "6"]
+
+issp[experiment==2 & subj_id=="12", common_subj_id := "7"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="9", common_subj_id := "7"]
+
+issp[experiment==2 & subj_id=="16", common_subj_id := "8"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
+
+issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="8", common_subj_id := "9"]
+```
+
 Preparing for “proportion correct” by subject
 
 ``` r
@@ -241,6 +285,7 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
 ```
 
     ##     subj_id.x prop_correct
+    ##        <char>        <num>
     ##  1:        P3    0.7760381
     ##  2:        15    0.6921167
     ##  3:        19    0.6021642
@@ -261,6 +306,7 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
     ## 18:        P5    0.6557060
     ## 19:        P4    0.7485893
     ## 20:        P9    0.8330097
+    ##     subj_id.x prop_correct
 
 ``` r
 prop_correct_subj_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)), by = .(subj_id.x, sac_suppression_f, stim_dur)][order(subj_id.x, sac_suppression_f, stim_dur)]
@@ -281,7 +327,7 @@ p_prop_correct_subj_replay <- ggplot(data = prop_correct_subj_replay,
 p_prop_correct_subj_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-8-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-10-1.svg)<!-- -->
 
 Here we will run the ezANOVA 1 for proportion correct
 
@@ -370,7 +416,7 @@ prop_replay_plot <- ggplot(data = p_correct_replay, aes(x = stim_dur, y = P_mean
 prop_replay_plot
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-11-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-13-1.svg)<!-- -->
 
 Here we will create BINS for the latency
 
@@ -400,7 +446,7 @@ p_prop_correct_subj_bins_replay <- ggplot(data = prop_correct_subj_bins_replay,
 p_prop_correct_subj_bins_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-13-1.svg)<!-- --> Here we
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-15-1.svg)<!-- --> Here we
 will have the ezANOVA 2 for the BINS
 
 ``` r
@@ -484,7 +530,7 @@ prop_bins_replay <- ggplot(data = p_correct_bins_replay,
 prop_bins_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-16-1.svg)<!-- --> Here we
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-18-1.svg)<!-- --> Here we
 will run some other des. statistics
 
 ``` r
@@ -496,8 +542,8 @@ ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may be
-    ## inaccurate.
+    ## of the full design, you must use the "within_full" argument, else results may
+    ## be inaccurate.
 
     ##   stim_dur  N     Mean        SD      FLSD
     ## 1     8.33 20 8.845138 0.1726913 0.1168101
@@ -519,8 +565,8 @@ ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may be
-    ## inaccurate.
+    ## of the full design, you must use the "within_full" argument, else results may
+    ## be inaccurate.
 
     ##   stim_dur  N     Mean        SD      FLSD
     ## 1     8.33 20 59.94793 0.8543478 0.6507833
@@ -542,8 +588,8 @@ anov_replay_sac_dur <- ezANOVA(data = ISSPR_data_without_overlap_metrics[experim
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may be
-    ## inaccurate.
+    ## of the full design, you must use the "within_full" argument, else results may
+    ## be inaccurate.
 
 Here we will figure out the effect of suppression and the task
 
@@ -596,31 +642,64 @@ p_ISSPR_suppression <- ggplot(data = p_correct_suppression,
 p_ISSPR_suppression
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-19-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-21-1.svg)<!-- -->
 
 Here we will have two dimensions (saccade duration and saccade
 amplitude) for each subject by mean
 
 ``` r
 ISSPR_data_without_overlap_metrics[, sac_amp_n := cut_number(sac_amp, n=10)]
-ISSPR_data_without_overlap_metrics[, sac_dur_bins := cut_number(sac_dur, n=6)]
+ISSPR_data_without_overlap_metrics[, sac_dur_bins := cut_number(sac_dur, n=2)]
+table(ISSPR_data_without_overlap_metrics$subj_id.x, 
+      ISSPR_data_without_overlap_metrics$sac_dur_bins)
+```
 
+    ##     
+    ##      [22,60] (60,102]
+    ##   08     792      774
+    ##   11     809      796
+    ##   12     800      783
+    ##   13     789      774
+    ##   15     790      821
+    ##   16     793      792
+    ##   17     775      748
+    ##   18     797      777
+    ##   19     792      779
+    ##   20     803      783
+    ##   21     845      758
+    ##   22     808      771
+    ##   P1     833      774
+    ##   P2     815      792
+    ##   P3     726      743
+    ##   P4     837      758
+    ##   P5     785      766
+    ##   P6     815      785
+    ##   P7     821      773
+    ##   P9     773      772
 
-metrics_subj_bins_replay_dur <- ISSPR_data_without_overlap_metrics[ , .(sac_dur_f = mean(sac_dur), sac_amp_f= mean(sac_amp)),
-                                                                by = .(subj_id.x, sac_amp_n)]
+``` r
+metrics_subj_bins_replay_dur <- ISSPR_data_without_overlap_metrics[ , .(sac_dur_f = mean(sac_dur), 
+                                                                        disp_off_re_sac_off = mean(replay_sac_display_off_latency), 
+                                                                        correct = mean(correct)),
+                                                                by = .(subj_id.x, sac_dur_bins, stim_dur)]
+metrics_subj_bins_replay_dur[ , sac_dur_f2 := mean(sac_dur_f), by = .(subj_id.x, sac_dur_bins)]
 ```
 
 Here is the plot of sac_dur and sac_amp
 
 ``` r
 ggplot(data = metrics_subj_bins_replay_dur, 
-       aes(x = sac_amp_f, y = sac_dur_f,
-           color = sac_amp_f )) + 
+       aes(x = disp_off_re_sac_off, 
+           #x = as.numeric(stim_dur),
+           y = correct,
+           color = sac_dur_f, group = sac_dur_f2 )) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  geom_vline(xintercept = 0, linetype = "dotted") + 
   geom_point() + geom_line() + 
   theme_classic() + 
-  labs(x = "Saccade amplitude", y = "Saccade duration", 
-       color = "Sac Amp", fill = "Sac Amp")+ 
+  labs(x = "Display offset re saccade offset", y = "Proportion correct", 
+       color = "Sacc. duration") + 
   facet_wrap(~subj_id.x)
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-21-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-23-1.svg)<!-- -->
