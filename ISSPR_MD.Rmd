@@ -103,6 +103,8 @@ Preparing data file
 ```{r}
 setDT(ISSPR_data_without_overlap_metrics)
 ISSPR_data_without_overlap_metrics <- ISSPR_data_without_overlap_metrics[!is.na(resp)]
+issp[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+issp[ , experiment_f := factor(experiment)]
 ```
 
 Stimulus Duration changes to numeric 
@@ -117,36 +119,93 @@ Here we start with the common_subj_id for Experiment 2 und Reply Experiment
 #first we will have the three P. which were tested for Experiment 1 and 2; Reply
 issp[experiment==2 & subj_id=="10", common_subj_id := "1"]
 issp[experiment==1 & subj_id=="20", common_subj_id := "1"]
-ISSPR_data_without_overlap_metrics[subj_id=="2", common_subj_id := "1"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="2", common_subj_id := "1"]
 
 issp[experiment==2 & subj_id=="20", common_subj_id := "2"]
 issp[experiment==1 & subj_id=="19", common_subj_id := "2"]
-ISSPR_data_without_overlap_metrics[subj_id=="3", common_subj_id := "2"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="3", common_subj_id := "2"]
 
 issp[experiment==2 & subj_id=="15", common_subj_id := "3"]
 issp[experiment==1 & subj_id=="23", common_subj_id := "3"]
-ISSPR_data_without_overlap_metrics[subj_id=="7", common_subj_id := "3"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="7", common_subj_id := "3"]
 
 # here we create only for P. which were included for Experiment 2 and Reply
 issp[experiment==2 & subj_id=="3", common_subj_id := "4"]
-ISSPR_data_without_overlap_metrics[subj_id=="5", common_subj_id := "4"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="5", common_subj_id := "4"]
 
 issp[experiment==2 & subj_id=="1", common_subj_id := "5"]
-ISSPR_data_without_overlap_metrics[subj_id=="1", common_subj_id := "5"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="1", common_subj_id := "5"]
 
 issp[experiment==2 & subj_id=="11", common_subj_id := "6"]
-ISSPR_data_without_overlap_metrics[subj_id=="4", common_subj_id := "6"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="4", common_subj_id := "6"]
 
 issp[experiment==2 & subj_id=="12", common_subj_id := "7"]
-ISSPR_data_without_overlap_metrics[subj_id=="9", common_subj_id := "7"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="9", common_subj_id := "7"]
 
 issp[experiment==2 & subj_id=="16", common_subj_id := "8"]
-ISSPR_data_without_overlap_metrics[subj_id=="20", common_subj_id := "8"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
-ISSPR_data_without_overlap_metrics[subj_id=="8", common_subj_id := "9"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="8", common_subj_id := "9"]
+```
+
+
+Here we create one plot for Exp. 1&2 and color condition 
+```{r}
+figure2_xlim_issp12 <- c(-50, 15)
+issp12_color_correct <- issp[experiment<3, 
+                             .(correct = mean(correct), sac_display_off_latency = mean(sac_display_off_latency)), 
+                             by= .(experiment_f, subj_id, color_yes_f, stim_dur_ms)]
+
+
+issp12_color_correct <- issp[experiment<3,# & sac_dur_prob>=0.4 & sac_dur_prob<=0.6, 
+                             .(correct = mean(correct), 
+                               sac_display_off_latency = mean(sac_display_off_latency)), 
+                             by = .(experiment_f, subj_id, color_yes_f, stim_dur_ms)]
+
+issp12_color_correct[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+issp12_color_correct[ , gm_correct := mean(correct), by = .(experiment_f)]
+issp12_color_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment_f, subj_id)]
+issp12_color_correct_agg <- issp12_color_correct[ , 
+                                                  .(correct = mean(correct.w), 
+                                                    correct_se = sd(correct.w) / sqrt(length(correct.w)), 
+                                                    sac_display_off_latency = mean(sac_display_off_latency), 
+                                                    sac_display_off_latency_sd = sd(sac_display_off_latency) / sqrt(length(sac_display_off_latency)) ), 
+                                                  by = .(experiment_f, color_yes_f, stim_dur_ms)]
+# plot the time course for the different scenes
+p_issp12_color <- ggplot(data = issp12_color_correct_agg, 
+                         aes(x = sac_display_off_latency, y = correct, color = color_yes_f, 
+                             shape = experiment_f, 
+                             group = paste(experiment_f, color_yes_f))) + 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+  geom_errorbar(aes(ymax = correct + correct_se, ymin = correct - correct_se), 
+                width = 0, size = 1, alpha = 0.5) + 
+  geom_errorbarh(aes(xmax = sac_display_off_latency + sac_display_off_latency_sd, 
+                     xmin = sac_display_off_latency - sac_display_off_latency_sd), 
+                 height = 0, size = 1, alpha = 0.5) + 
+  geom_line(size = 1.5, alpha = 0.8) + 
+  geom_point(size = 2.5) + 
+  theme_classic(base_size = 12.5) + ocimTheme() + 
+  coord_cartesian(ylim = c(0.45, 1)) + 
+  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_shape_manual(values = c(15, 17)) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10), limits = figure2_xlim_issp12) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Image type", fill = "Image type", shape = "Experiment")
+p_issp12_color
 
 ```
+Here I tried to create another Plot for the Reply Exp., Exp 1&2 and Prop correct
+```{r}
+issp2_gray_correct <- issp12_color_correct_agg[experiment_f==2 & color_yes_f=="grayscale"]
+issp2_gray_correct[ , sac_suppression_f:= factor ("unfiltered")]
+issp2_gray_correct[, fixreplay:= ("Saccade (Exp. 1&2)")]
+
+```
+
+
 Preparing for "proportion correct" by subject 
 ```{r}
 ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)), 
@@ -155,6 +214,9 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
 prop_correct_subj_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)), by = .(subj_id.x, sac_suppression_f, stim_dur)][order(subj_id.x, sac_suppression_f, stim_dur)]
 
 ```
+
+
+
 
 Plot for proportion correct by image type and subject 
 ```{r}

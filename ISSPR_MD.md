@@ -230,6 +230,8 @@ Preparing data file
 ``` r
 setDT(ISSPR_data_without_overlap_metrics)
 ISSPR_data_without_overlap_metrics <- ISSPR_data_without_overlap_metrics[!is.na(resp)]
+issp[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+issp[ , experiment_f := factor(experiment)]
 ```
 
 Stimulus Duration changes to numeric
@@ -275,6 +277,73 @@ ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="8", common_subj_id := "9"]
+```
+
+Here we create one plot for Exp. 1&2 and color conditon
+
+``` r
+figure2_xlim_issp12 <- c(-50, 15)
+issp12_color_correct <- issp[experiment<3, 
+                             .(correct = mean(correct), sac_display_off_latency = mean(sac_display_off_latency)), 
+                             by= .(experiment_f, subj_id, color_yes_f, stim_dur_ms)]
+
+
+issp12_color_correct <- issp[experiment<3,# & sac_dur_prob>=0.4 & sac_dur_prob<=0.6, 
+                             .(correct = mean(correct), 
+                               sac_display_off_latency = mean(sac_display_off_latency)), 
+                             by = .(experiment_f, subj_id, color_yes_f, stim_dur_ms)]
+
+issp12_color_correct[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+issp12_color_correct[ , gm_correct := mean(correct), by = .(experiment_f)]
+issp12_color_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment_f, subj_id)]
+issp12_color_correct_agg <- issp12_color_correct[ , 
+                                                  .(correct = mean(correct.w), 
+                                                    correct_se = sd(correct.w) / sqrt(length(correct.w)), 
+                                                    sac_display_off_latency = mean(sac_display_off_latency), 
+                                                    sac_display_off_latency_sd = sd(sac_display_off_latency) / sqrt(length(sac_display_off_latency)) ), 
+                                                  by = .(experiment_f, color_yes_f, stim_dur_ms)]
+# plot the time course for the different scenes
+p_issp12_color <- ggplot(data = issp12_color_correct_agg, 
+                         aes(x = sac_display_off_latency, y = correct, color = color_yes_f, 
+                             shape = experiment_f, 
+                             group = paste(experiment_f, color_yes_f))) + 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+  geom_errorbar(aes(ymax = correct + correct_se, ymin = correct - correct_se), 
+                width = 0, size = 1, alpha = 0.5) + 
+  geom_errorbarh(aes(xmax = sac_display_off_latency + sac_display_off_latency_sd, 
+                     xmin = sac_display_off_latency - sac_display_off_latency_sd), 
+                 height = 0, size = 1, alpha = 0.5) + 
+  geom_line(size = 1.5, alpha = 0.8) + 
+  geom_point(size = 2.5) + 
+  theme_classic(base_size = 12.5) + ocimTheme() + 
+  coord_cartesian(ylim = c(0.45, 1)) + 
+  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_shape_manual(values = c(15, 17)) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10), limits = figure2_xlim_issp12) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Image type", fill = "Image type", shape = "Experiment")
+```
+
+    ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+    ## ℹ Please use `linewidth` instead.
+    ## This warning is displayed once every 8 hours.
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
+
+``` r
+p_issp12_color
+```
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-9-1.svg)<!-- --> Here I
+tried to create another Plot for the Reply Exp., Exp 1&2 and Prop
+correct
+
+``` r
+issp2_gray_correct <- issp12_color_correct_agg[experiment_f==2 & color_yes_f=="grayscale"]
+issp2_gray_correct[ , sac_suppression_f:= factor ("unfiltered")]
+issp2_gray_correct[, fixreplay:= ("Saccade (Exp. 1&2)")]
 ```
 
 Preparing for “proportion correct” by subject
@@ -327,7 +396,7 @@ p_prop_correct_subj_replay <- ggplot(data = prop_correct_subj_replay,
 p_prop_correct_subj_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-10-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-12-1.svg)<!-- -->
 
 Here we will run the ezANOVA 1 for proportion correct
 
@@ -416,7 +485,7 @@ prop_replay_plot <- ggplot(data = p_correct_replay, aes(x = stim_dur, y = P_mean
 prop_replay_plot
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-13-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-15-1.svg)<!-- -->
 
 Here we will create BINS for the latency
 
@@ -446,7 +515,7 @@ p_prop_correct_subj_bins_replay <- ggplot(data = prop_correct_subj_bins_replay,
 p_prop_correct_subj_bins_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-15-1.svg)<!-- --> Here we
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-17-1.svg)<!-- --> Here we
 will have the ezANOVA 2 for the BINS
 
 ``` r
@@ -530,7 +599,7 @@ prop_bins_replay <- ggplot(data = p_correct_bins_replay,
 prop_bins_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-18-1.svg)<!-- --> Here we
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-20-1.svg)<!-- --> Here we
 will run some other des. statistics
 
 ``` r
@@ -642,7 +711,7 @@ p_ISSPR_suppression <- ggplot(data = p_correct_suppression,
 p_ISSPR_suppression
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-21-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-23-1.svg)<!-- -->
 
 Here we will have two dimensions (saccade duration and saccade
 amplitude) for each subject by mean
@@ -702,4 +771,4 @@ ggplot(data = metrics_subj_bins_replay_dur,
   facet_wrap(~subj_id.x)
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-23-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-25-1.svg)<!-- -->
