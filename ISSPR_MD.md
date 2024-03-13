@@ -145,8 +145,15 @@ table(ISSPR_data_without_overlap_metrics$subj_id.x, ISSPR_data_without_overlap_m
 Here we load the data from Experiment 1-3
 
 ``` r
-load("~/Masterarbeit/ISSPR R Studio/ISSP_cleaned_data (1).rda")
-View(issp)
+#load("~/Masterarbeit/ISSPR R Studio/ISSP_cleaned_data (1).rda")
+#View(issp)
+
+# Richard: 
+# To make sure that I and other people can run this script, it is important to only use file paths that are synced via Git. 
+# In other words, you should put this file in the project directory, so that it can be pushed to Github. 
+# Of course, the file 'ISSP_cleaned_data.rda' is huge (~1.4 GB), because it contains all the raw samples, and it should not be on Github. 
+# That's why I made a file that contains only the data.table 'issp' (since that's what you're using anyway), that we load here:
+load("ISSP_data.rda")
 ```
 
 Here we will load the needed libraries
@@ -284,7 +291,7 @@ View(issp)
 Here we create one plot for Exp. 1&2 and color condition (Example)
 
 ``` r
-figure2_xlim_issp12 <- c(-50, 15)
+figure2_xlim_issp12 <- c(-50, 25)
 
 issp12_color_correct <- issp[experiment<3,# & sac_dur_prob>=0.4 & sac_dur_prob<=0.6, 
                              .(correct = mean(correct), 
@@ -342,38 +349,82 @@ Here we start with the Prop. Correct for ISSP 1&2; by common_subj_id
 issp12_prop_correct <- issp[experiment<3, 
                              .(correct = mean(correct), 
                                sac_display_off_latency = mean(sac_display_off_latency)), 
-                             by = .(experiment_f, common_subj_id, color_yes_f, stim_dur_ms)]
+                             by = .(experiment_f, subj_id, common_subj_id, color_yes_f, stim_dur_ms)]
 
 issp12_prop_correct[ , stim_dur_ms_f := ordered(stim_dur_ms)]
 issp12_prop_correct[ , gm_correct := mean(correct), by = .(experiment_f)]
 issp12_prop_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment_f, common_subj_id)]
-issp12_prop_correct [, color_yes_f=="grayscale"]
+# issp12_prop_correct [, color_yes_f=="grayscale"]
+# Richard: this command above does nothing but tell you whether the column color_yes_f is grayscale. 
+# As you can see the output is just a vector of TRUE and FALSE. 
+# What you want instead is a subset of only those values where color_yes_f is grayscale. This is done here:
+issp12_prop_correct <- issp12_prop_correct[color_yes_f=="grayscale"]
+issp12_prop_correct[ , sac_suppression_f:= factor("unfiltered")]
+issp12_prop_correct[ , fixreplay:= ("Saccade (Exp. 1&2)")]
+# if you check this, you find that all other subjects are also still included as NA:
+table(issp12_prop_correct$common_subj_id, issp12_prop_correct$experiment_f, useNA="ifany")
 ```
 
-    ##  [1]  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE
-    ## [13] FALSE FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE
-    ## [25]  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE
-    ## [37]  TRUE FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE
-    ## [49]  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE
-    ## [61] FALSE FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE
-    ## [73]  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE FALSE
-    ## [85] FALSE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE
+    ##       
+    ##         1  2  3
+    ##   1     4  4  0
+    ##   2     4  4  0
+    ##   3     4  4  0
+    ##   6     0  4  0
+    ##   7     0  4  0
+    ##   8     0  4  0
+    ##   9     0  4  0
+    ##   <NA> 68 52  0
 
 ``` r
-issp12_prop_correct[ , sac_suppression_f:= factor ("unfiltered")]
-issp12_prop_correct[, fixreplay:= ("Saccade (Exp. 1&2)")]
+issp12_prop_correct[is.na(common_subj_id), common_subj_id := "all others"]
+# in this variable we code whether participants have a common_subj_id or not
+issp12_prop_correct[common_subj_id == "all others", common_subj_id_exists := "unmatched"]
+issp12_prop_correct[common_subj_id != "all others", common_subj_id_exists := "matched"]
 
+# this has to be a population aggregate. Including common_subj_id aggregates for each subject (which is already aggregated)
 issp12_prop_correct_agg <- issp12_prop_correct[ , 
                                                   .(correct = mean(correct.w), 
                                                     correct_se = sd(correct.w) / sqrt(length(correct.w)), 
                                                     sac_display_off_latency = mean(sac_display_off_latency), 
                                                     sac_display_off_latency_sd = sd(sac_display_off_latency) / sqrt(length(sac_display_off_latency)) ), 
-                                                  by = .(common_subj_id,experiment_f, color_yes_f, stim_dur_ms, fixreplay, sac_suppression_f)]
+                                                  by = .(common_subj_id_exists, 
+                                                         experiment_f, color_yes_f, stim_dur_ms, fixreplay, sac_suppression_f)]
 ```
 
 Here we create the Plot for Prop. Correct; ISSP 1&2 and Common_subj_id
 
+Richard: Note the command to determine figure width and height in
+markdown.
+
 ``` r
+# this is for individual subjects, only those that have a common_subj_id:
+p_issp12_prop_subj <- ggplot(data = issp12_prop_correct[common_subj_id != "all others"], 
+                         aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                             shape = fixreplay, 
+                             group = paste(experiment_f, color_yes_f)))+ 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+  geom_line(size = 1.5, alpha = 0.8) + 
+  geom_point(size = 2.5) + 
+  theme_classic(base_size = 12.5) + ocimTheme() + 
+  coord_cartesian(ylim = c(0.45, 1)) + 
+  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_shape_manual(values = c(15, 17)) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+  # Richard: I have added the facet_wrap below to allow a view at individual subjects
+  facet_wrap(~common_subj_id) 
+p_issp12_prop_subj
+```
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-11-1.svg)<!-- -->
+
+``` r
+# this plot contains the population aggregate for participants that are matched across experiments
+# (common_subj_ids 1..9) and those that are not (encoded in the variable common_subj_id_exists)
 p_issp12_prop <- ggplot(data = issp12_prop_correct_agg, 
                          aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
                              shape = fixreplay, 
@@ -392,27 +443,23 @@ p_issp12_prop <- ggplot(data = issp12_prop_correct_agg,
   scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
   scale_shape_manual(values = c(15, 17)) + 
   scale_y_continuous(expand = c(0,0)) + 
-  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10), limits = figure2_xlim_issp12) + 
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
   labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
-       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task")
-p_issp12_prop 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+  facet_wrap(~common_subj_id_exists)
+p_issp12_prop
 ```
 
-    ## Warning: Removed 96 rows containing missing values (`geom_errorbarh()`).
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-11-2.svg)<!-- -->
 
-    ## Warning: Removed 2 rows containing missing values (`geom_line()`).
-
-    ## Warning: Removed 2 rows containing missing values (`geom_point()`).
-
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-11-1.svg)<!-- -->
-
-Here we start with the Prop. Correct for ISSP Replay by common_subj_id
+MARA, you CONTINUE FROM HERE making a plot that does the same for the
+Replay Experiment (for unfiltered vs suppression)…
 
 ``` r
 ISSPR_prop_correct <- ISSPR_data_without_overlap_metrics[experiment==4, 
                              .(correct = mean(correct), 
                                replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
-                             by = .(experiment, common_subj_id, color_yes_f, stim_dur)]
+                             by = .(experiment, common_subj_id, color_yes_f, stim_dur)] # Richard: color_yes is not useful here
 
 ISSPR_prop_correct[ , stim_dur := ordered(stim_dur)]
 ISSPR_prop_correct[ , gm_correct := mean(correct), by = .(experiment)]
@@ -463,11 +510,8 @@ p_ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
 p_ISSPR_prop
 ```
 
-    ## Warning: Removed 18 rows containing missing values (`geom_errorbarh()`).
-
-    ## Warning: Removed 4 rows containing missing values (`geom_line()`).
-
-    ## Warning: Removed 4 rows containing missing values (`geom_point()`).
+    ## Warning: Removed 18 rows containing missing values or values outside the scale range
+    ## (`geom_errorbarh()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-13-1.svg)<!-- -->
 
