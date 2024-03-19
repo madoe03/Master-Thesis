@@ -253,6 +253,35 @@ Here we start with the common_subj_id for Experiment 2 und Reply
 Experiment
 
 ``` r
+#### RICHARDs COMMENTS
+# Richard: Have a look at the subject codes in the replay experiment:
+table(ISSPR_data_without_overlap_metrics$subj_id.x, useNA = "ifany")
+```
+
+    ## 
+    ##   08   11   12   13   15   16   17   18   19   20   21   22   P1   P2   P3   P4 
+    ## 1566 1605 1583 1563 1611 1585 1523 1574 1571 1586 1603 1579 1607 1607 1469 1595 
+    ##   P5   P6   P7   P9 
+    ## 1551 1600 1594 1545
+
+``` r
+# ... so this is why indexing like this would not work (it's actually "P2")
+table(ISSPR_data_without_overlap_metrics$subj_id.x=="2", useNA = "ifany")
+```
+
+    ## 
+    ## FALSE 
+    ## 31517
+
+``` r
+# Fixing the naming conventions should fix the common_subj_id. 
+# Remember to check whether the naming worked by doing:
+# table(ISSPR_data_without_overlap_metrics$subj_id.x, 
+#       ISSPR_data_without_overlap_metrics$common_subj_id, 
+#       useNA = "ifany")
+#### END
+
+
 #first we will have the three P. which were tested for Experiment 1 and 2; Reply
 issp[experiment==2 & subj_id=="10", common_subj_id := "1"]
 issp[experiment==1 & subj_id=="20", common_subj_id := "1"]
@@ -285,8 +314,6 @@ ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="8", common_subj_id := "9"]
 ```
-
-View(issp)
 
 Here we create one plot for Exp. 1&2 and color condition (Example)
 
@@ -452,10 +479,10 @@ Here we start making a plot that does the same for the Replay Experiment
 (for unfiltered vs suppression)
 
 ``` r
-ISSPR_prop_correct <- ISSPR_data_without_overlap_metrics[(experiment==4), 
+ISSPR_prop_correct <- ISSPR_data_without_overlap_metrics[experiment==4, 
                              .(correct = mean(correct), 
                                replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
-                             by = .(experiment, common_subj_id, sac_suppression_f, stim_dur)] # Richard: color_yes is not useful here
+                             by = .(experiment, common_subj_id, sac_suppression_f, stim_dur)] 
 
 ISSPR_prop_correct[ , stim_dur := ordered(stim_dur)]
 ISSPR_prop_correct[ , gm_correct := mean(correct), by = .(experiment)]
@@ -476,6 +503,20 @@ table(ISSPR_prop_correct$common_subj_id, ISSPR_prop_correct$experiment, useNA="i
 
 ``` r
 ISSPR_prop_correct[is.na(common_subj_id), common_subj_id := "all others"]
+# Richard: 
+# Indeed, already in your base data frame you do not have proper common_subj_id 
+table(ISSPR_data_without_overlap_metrics$common_subj_id, useNA = "ifany")
+```
+
+    ## 
+    ##     8  <NA> 
+    ##  1586 29931
+
+``` r
+# -- see comments in chunk 8
+
+
+
 
 # in this variable we code whether participants have a common_subj_id or not
 ISSPR_prop_correct[common_subj_id == "all others", common_subj_id_exists_replay := "unmatched"]
@@ -516,9 +557,11 @@ ISSPR_prop_subj <- ggplot(data = ISSPR_prop_correct[common_subj_id != "all other
 ISSPR_prop_subj
 ```
 
-    ## Warning: Removed 1 row containing missing values (`geom_line()`).
+    ## Warning: Removed 1 row containing missing values or values outside the scale range
+    ## (`geom_line()`).
 
-    ## Warning: Removed 1 rows containing missing values (`geom_point()`).
+    ## Warning: Removed 1 row containing missing values or values outside the scale range
+    ## (`geom_point()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-13-1.svg)<!-- -->
 
@@ -549,7 +592,8 @@ ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
 ISSPR_prop
 ```
 
-    ## Warning: Removed 1 rows containing missing values (`geom_errorbarh()`).
+    ## Warning: Removed 1 row containing missing values or values outside the scale range
+    ## (`geom_errorbarh()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-14-1.svg)<!-- -->
 
