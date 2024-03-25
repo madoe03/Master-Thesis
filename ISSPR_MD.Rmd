@@ -130,43 +130,46 @@ table(ISSPR_data_without_overlap_metrics$subj_id.x, useNA = "ifany")
 table(ISSPR_data_without_overlap_metrics$subj_id.x=="2", useNA = "ifany")
 # Fixing the naming conventions should fix the common_subj_id. 
 # Remember to check whether the naming worked by doing:
-# table(ISSPR_data_without_overlap_metrics$subj_id.x, 
-#       ISSPR_data_without_overlap_metrics$common_subj_id, 
-#       useNA = "ifany")
+#table(ISSPR_data_without_overlap_metrics$subj_id.x, 
+       #ISSPR_data_without_overlap_metrics$common_subj_id, 
+       #useNA = "ifany")
 #### END
 
+###Mara COMMENTS
+# I change it here and with ur last code (checking); it looks good (I guess)
+###END
 
 #first we will have the three P. which were tested for Experiment 1 and 2; Reply
 issp[experiment==2 & subj_id=="10", common_subj_id := "1"]
 issp[experiment==1 & subj_id=="20", common_subj_id := "1"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="2", common_subj_id := "1"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P2", common_subj_id := "1"]
 
 issp[experiment==2 & subj_id=="20", common_subj_id := "2"]
 issp[experiment==1 & subj_id=="19", common_subj_id := "2"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="3", common_subj_id := "2"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P3", common_subj_id := "2"]
 
 issp[experiment==2 & subj_id=="15", common_subj_id := "3"]
 issp[experiment==1 & subj_id=="23", common_subj_id := "3"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="7", common_subj_id := "3"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P7", common_subj_id := "3"]
 
 # here we create only for P. which were included for Experiment 2 and Reply
 issp[experiment==2 & subj_id=="3", common_subj_id := "4"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="5", common_subj_id := "4"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P5", common_subj_id := "4"]
 
 issp[experiment==2 & subj_id=="1", common_subj_id := "5"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="1", common_subj_id := "5"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P1", common_subj_id := "5"]
 
 issp[experiment==2 & subj_id=="11", common_subj_id := "6"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="4", common_subj_id := "6"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P4", common_subj_id := "6"]
 
 issp[experiment==2 & subj_id=="12", common_subj_id := "7"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="9", common_subj_id := "7"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P9", common_subj_id := "7"]
 
 issp[experiment==2 & subj_id=="16", common_subj_id := "8"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="8", common_subj_id := "9"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="08", common_subj_id := "9"]
 ```
 
 Here we create one plot for Exp. 1&2 and color condition (Example)

@@ -276,43 +276,46 @@ table(ISSPR_data_without_overlap_metrics$subj_id.x=="2", useNA = "ifany")
 ``` r
 # Fixing the naming conventions should fix the common_subj_id. 
 # Remember to check whether the naming worked by doing:
-# table(ISSPR_data_without_overlap_metrics$subj_id.x, 
-#       ISSPR_data_without_overlap_metrics$common_subj_id, 
-#       useNA = "ifany")
+#table(ISSPR_data_without_overlap_metrics$subj_id.x, 
+       #ISSPR_data_without_overlap_metrics$common_subj_id, 
+       #useNA = "ifany")
 #### END
 
+###Mara COMMENTS
+# I change it here and with ur last code (checking); it looks good (I guess)
+###END
 
 #first we will have the three P. which were tested for Experiment 1 and 2; Reply
 issp[experiment==2 & subj_id=="10", common_subj_id := "1"]
 issp[experiment==1 & subj_id=="20", common_subj_id := "1"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="2", common_subj_id := "1"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P2", common_subj_id := "1"]
 
 issp[experiment==2 & subj_id=="20", common_subj_id := "2"]
 issp[experiment==1 & subj_id=="19", common_subj_id := "2"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="3", common_subj_id := "2"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P3", common_subj_id := "2"]
 
 issp[experiment==2 & subj_id=="15", common_subj_id := "3"]
 issp[experiment==1 & subj_id=="23", common_subj_id := "3"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="7", common_subj_id := "3"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P7", common_subj_id := "3"]
 
 # here we create only for P. which were included for Experiment 2 and Reply
 issp[experiment==2 & subj_id=="3", common_subj_id := "4"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="5", common_subj_id := "4"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P5", common_subj_id := "4"]
 
 issp[experiment==2 & subj_id=="1", common_subj_id := "5"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="1", common_subj_id := "5"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P1", common_subj_id := "5"]
 
 issp[experiment==2 & subj_id=="11", common_subj_id := "6"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="4", common_subj_id := "6"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P4", common_subj_id := "6"]
 
 issp[experiment==2 & subj_id=="12", common_subj_id := "7"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="9", common_subj_id := "7"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P9", common_subj_id := "7"]
 
 issp[experiment==2 & subj_id=="16", common_subj_id := "8"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="8", common_subj_id := "9"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="08", common_subj_id := "9"]
 ```
 
 Here we create one plot for Exp. 1&2 and color condition (Example)
@@ -498,7 +501,15 @@ table(ISSPR_prop_correct$common_subj_id, ISSPR_prop_correct$experiment, useNA="i
 
     ##       
     ##         4
+    ##   1    18
+    ##   2    18
+    ##   3    18
+    ##   4    18
+    ##   5    18
+    ##   6    18
+    ##   7    18
     ##   8    18
+    ##   9    18
     ##   <NA> 18
 
 ``` r
@@ -509,8 +520,8 @@ table(ISSPR_data_without_overlap_metrics$common_subj_id, useNA = "ifany")
 ```
 
     ## 
-    ##     8  <NA> 
-    ##  1586 29931
+    ##     1     2     3     4     5     6     7     8     9  <NA> 
+    ##  1607  1469  1594  1551  1607  1595  1545  1586  1566 17397
 
 ``` r
 # -- see comments in chunk 8
@@ -557,11 +568,9 @@ ISSPR_prop_subj <- ggplot(data = ISSPR_prop_correct[common_subj_id != "all other
 ISSPR_prop_subj
 ```
 
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_line()`).
+    ## Warning: Removed 1 row containing missing values (`geom_line()`).
 
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_point()`).
+    ## Warning: Removed 5 rows containing missing values (`geom_point()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-13-1.svg)<!-- -->
 
@@ -591,9 +600,6 @@ ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
 
 ISSPR_prop
 ```
-
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_errorbarh()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-14-1.svg)<!-- -->
 
