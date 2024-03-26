@@ -490,7 +490,15 @@ ISSPR_prop_correct <- ISSPR_data_without_overlap_metrics[experiment==4,
 ISSPR_prop_correct[ , stim_dur := ordered(stim_dur)]
 ISSPR_prop_correct[ , gm_correct := mean(correct), by = .(experiment)]
 ISSPR_prop_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, common_subj_id)]
-ISSPR_prop_correct[ , sac_suppression_f:= factor ("filtered")]
+str(ISSPR_prop_correct$sac_suppression_f) # Richard: Why do you do this below? You already have the correct factor
+```
+
+    ##  Factor w/ 2 levels "original","suppressed": 1 1 2 2 2 2 2 2 2 2 ...
+
+``` r
+#ISSPR_prop_correct[ , sac_suppression_f:= factor ("filtered")]
+# if you want to re-level, you can do this:
+levels(ISSPR_prop_correct$sac_suppression_f) <- c("unfiltered", "filtered")
 ISSPR_prop_correct[, fixreplay:= ("Replay (Exp. 4)")]
 
 # Mara: Here I think is a mistake; the output make no sense for me; was not sure if it
@@ -526,20 +534,17 @@ table(ISSPR_data_without_overlap_metrics$common_subj_id, useNA = "ifany")
 ``` r
 # -- see comments in chunk 8
 
-
-
-
 # in this variable we code whether participants have a common_subj_id or not
 ISSPR_prop_correct[common_subj_id == "all others", common_subj_id_exists_replay := "unmatched"]
 ISSPR_prop_correct[common_subj_id != "all others", common_subj_id_exists_replay := "matched"]
 
-
-
+# Replay: population-level aggregate
 ISSPR_prop_correct_agg <- ISSPR_prop_correct[ , 
                                                   .(correct = mean(correct.w), 
                                                     correct_se = sd(correct.w) / sqrt(length(correct.w)), 
                                                     replay_sac_display_off_latency = mean(replay_sac_display_off_latency), 
-                                                    replay_sac_display_off_latency_sd = sd(replay_sac_display_off_latency) / sqrt(length(replay_sac_display_off_latency)) ), 
+                                                    replay_sac_display_off_latency_sd = sd(replay_sac_display_off_latency) /
+                                                      sqrt(length(replay_sac_display_off_latency)) ), 
                                                   by = .(common_subj_id_exists_replay, experiment, stim_dur, fixreplay, sac_suppression_f)]
 ```
 
@@ -568,11 +573,15 @@ ISSPR_prop_subj <- ggplot(data = ISSPR_prop_correct[common_subj_id != "all other
 ISSPR_prop_subj
 ```
 
-    ## Warning: Removed 1 row containing missing values (`geom_line()`).
+    ## Warning: Removed 1 row containing missing values or values outside the scale range
+    ## (`geom_line()`).
 
-    ## Warning: Removed 5 rows containing missing values (`geom_point()`).
+    ## Warning: Removed 5 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-13-1.svg)<!-- -->
+
+Plot of population aggregate…
 
 ``` r
 ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg, 
@@ -601,6 +610,9 @@ ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
 ISSPR_prop
 ```
 
+    ## Warning: Removed 18 rows containing missing values or values outside the scale range
+    ## (`geom_errorbarh()`).
+
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-14-1.svg)<!-- -->
 
 Preparing for “proportion correct” by subject
@@ -611,7 +623,6 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
 ```
 
     ##     subj_id.x prop_correct
-    ##        <char>        <num>
     ##  1:        P3    0.7760381
     ##  2:        15    0.6921167
     ##  3:        19    0.6021642
@@ -632,7 +643,6 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
     ## 18:        P5    0.6557060
     ## 19:        P4    0.7485893
     ## 20:        P9    0.8330097
-    ##     subj_id.x prop_correct
 
 ``` r
 prop_correct_subj_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)), by = .(subj_id.x, sac_suppression_f, stim_dur)][order(subj_id.x, sac_suppression_f, stim_dur)]
