@@ -139,7 +139,7 @@ table(ISSPR_data_without_overlap_metrics$subj_id.x=="2", useNA = "ifany")
 # I change it here and with ur last code (checking); it looks good (I guess)
 ###END
 
-#first we will have the three P. which were tested for Experiment 1 and 2; Reply
+#first we will have the three P. which were tested for Experiment 1 and 2; Replay
 issp[experiment==2 & subj_id=="10", common_subj_id := "1"]
 issp[experiment==1 & subj_id=="20", common_subj_id := "1"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="P2", common_subj_id := "1"]
@@ -152,7 +152,7 @@ issp[experiment==2 & subj_id=="15", common_subj_id := "3"]
 issp[experiment==1 & subj_id=="23", common_subj_id := "3"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="P7", common_subj_id := "3"]
 
-# here we create only for P. which were included for Experiment 2 and Reply
+# here we create only for P. which were included for Experiment 2 and Replay
 issp[experiment==2 & subj_id=="3", common_subj_id := "4"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="P5", common_subj_id := "4"]
 
@@ -270,9 +270,11 @@ p_issp12_prop_subj <- ggplot(data = issp12_prop_correct[common_subj_id != "all o
        color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
   facet_wrap(~common_subj_id) 
 p_issp12_prop_subj
+```
 
-# this plot contains the population aggregate for participants that are matched across experiments  
-#(common_subj_ids 1..9) and those that are not (encoded in the variable common_subj_id_exists)
+this plot contains the population aggregate for participants that are matched across experiments  
+(common_subj_ids 1..9) and those that are not (encoded in the variable common_subj_id_exists)
+``` {r}
 p_issp12_prop <- ggplot(data = issp12_prop_correct_agg, 
                          aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
                              shape = fixreplay, 
@@ -296,7 +298,6 @@ p_issp12_prop <- ggplot(data = issp12_prop_correct_agg,
        color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
   facet_wrap(~common_subj_id_exists)
 p_issp12_prop
-
 ```
 
 Here we start making a plot that does the same for the Replay Experiment (for unfiltered vs suppression)
@@ -337,6 +338,7 @@ ISSPR_prop_correct_agg <- ISSPR_prop_correct[ ,
                                                     replay_sac_display_off_latency_sd = sd(replay_sac_display_off_latency) /
                                                       sqrt(length(replay_sac_display_off_latency)) ), 
                                                   by = .(common_subj_id_exists_replay, experiment, stim_dur, fixreplay, sac_suppression_f)]
+ISSPR_prop_correct_agg
 ```
 Here we create the Plot for Prop. Correct; ISSP Replay and common_subj_id
 ```{r, fig.width=15, fig.height=7} 
@@ -361,7 +363,8 @@ ISSPR_prop_subj <- ggplot(data = ISSPR_prop_correct[common_subj_id != "all other
 ISSPR_prop_subj
 ``` 
 
-Plot of population aggregate...
+
+Here, this plot contains the population aggregate for participants for Replay Condition  
 ```{r, fig.width=15, fig.height=7} 
 ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg, 
                          aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
@@ -389,6 +392,65 @@ ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
 ISSPR_prop
 ```
 
+Here we combine saccade and replay condition in one Plot 
+```{r}
+ggplot()+
+  geom_point(data=ISSPR_prop_correct[common_subj_id != "all others"], 
+                         aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                             shape = fixreplay, 
+                             group = paste(experiment, sac_suppression_f)))+
+geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+  geom_line(size = 1.5, alpha = 0.8) + 
+  geom_point(size = 2.5) + 
+  theme_classic(base_size = 12.5) + ocimTheme() + 
+  coord_cartesian(ylim = c(0.45, 1)) + 
+  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_shape_manual(values = c(15, 17)) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+  facet_wrap(~common_subj_id) +
+ geom_point(data= issp12_prop_correct[common_subj_id != "all others"], 
+                         aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                             shape = fixreplay, 
+                             group = paste(experiment_f, color_yes_f)))+ 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+  geom_line(size = 1.5, alpha = 0.8) + 
+  geom_point(size = 2.5) + 
+  theme_classic(base_size = 12.5) + ocimTheme() + 
+  coord_cartesian(ylim = c(0.45, 1)) + 
+  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_shape_manual(values = c(15, 17)) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+  facet_wrap(~common_subj_id)
+
+```
+
+Here we start with statistic differences between saccade/replay condition
+First: within subject (VP (N=9) data from Exp 1&2 + Replay)
+```{r}
+
+#issp12_prop_correct$stim_dur_ms <-factor(issp12_prop_correct$stim_dur_ms)
+#issp12_prop_correct$subj_id <-factor(issp12_prop_correct$subj_id)
+
+anov_replay<- ezANOVA(data = , 
+        dv = .(), wid = .(), 
+        within = .())
+```
+
+Here we start with statistic for the orthers N=11; between- subject design
+```{r}
+
+
+
+
+```
 
 Preparing for "proportion correct" by subject 
 ```{r}
