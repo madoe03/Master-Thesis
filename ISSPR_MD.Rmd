@@ -33,6 +33,7 @@ Here we load the data from Experiment 1-3
 load("ISSP_data.rda")
 ```
 
+
 Here we will load the needed libraries
 ```{r,message=FALSE}
 library(data.table)
@@ -59,6 +60,7 @@ library(mgcv)
 library(robustbase)
 library(quickpsy)
 library(scales)
+library (tidyr)
 ```
 
 Some important basics before running main parts
@@ -436,19 +438,31 @@ Here we start with statistic differences between saccade/replay condition
 First: within subject (VP (N=9) data from Exp 1&2 + Replay)
 ```{r}
 
-#issp12_prop_correct$stim_dur_ms <-factor(issp12_prop_correct$stim_dur_ms)
-#issp12_prop_correct$subj_id <-factor(issp12_prop_correct$subj_id)
+#Problem ist, dass ich Proband:innen habe, bei denen für bestimmte Faktorstufen von stim_dur_ms Werte in ‘correct’ fehlen.
+# habe hier keine Daten mit common_subj_id == 4 oder common_subj_id == 5 im Datenframe für Experiment 1 & 2
+complete( issp12_prop_correct, common_subj_id, stim_dur_ms, fill= list( correct = NA ) )
+issp12_prop_correct$stim_dur_ms <-factor(issp12_prop_correct$stim_dur_ms)
+issp12_prop_correct$common_subj_id <-factor(issp12_prop_correct$common_subj_id)
 
-anov_replay<- ezANOVA(data = , 
-        dv = .(), wid = .(), 
-        within = .())
+anov_issp12<- ezANOVA(data = issp12_prop_correct, 
+        dv = .(correct), wid = .(common_subj_id), 
+        within = .(stim_dur_ms))
+
+
+anov_replay<- ezANOVA(data = ISSPR_prop_correct, 
+        dv = .(correct), wid = .(common_subj_id), 
+        within = .(stim_dur_ms))
+
 ```
 
-Here we start with statistic for the orthers N=11; between- subject design
+Here we start with statistic for the others N=11; between- subject design
 ```{r}
 
+ezANOVA(data = issp12_prop_correct, 
+        wid = .(common_subj_id), dv = .(correct), within = .(stim_dur_ms), between = .(common_subj_id == "all others"))
 
-
+ezANOVA(data = ISSPR_prop_correct, 
+        wid = .(common_subj_id), dv = .(correct), within = .(stim_dur_ms), between = .(common_subj_id == "all others"))
 
 ```
 
