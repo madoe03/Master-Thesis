@@ -155,10 +155,10 @@ issp[experiment==1 & subj_id=="23", common_subj_id := "3"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="P7", common_subj_id := "3"]
 
 # here we create only for P. which were included for Experiment 2 and Replay
-issp[experiment==2 & subj_id=="3", common_subj_id := "4"]
+issp[experiment==2 & subj_id=="03", common_subj_id := "4"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="P5", common_subj_id := "4"]
 
-issp[experiment==2 & subj_id=="1", common_subj_id := "5"]
+issp[experiment==2 & subj_id=="01", common_subj_id := "5"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="P1", common_subj_id := "5"]
 
 issp[experiment==2 & subj_id=="11", common_subj_id := "6"]
@@ -172,6 +172,11 @@ ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="08", common_subj_id := "9"]
+
+# check saccade experiments
+table(issp$experiment, issp$common_subj_id)
+# check replay experiment
+table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
 ```
 
 Here we create one plot for Exp. 1&2 and color condition (Example)
@@ -398,38 +403,38 @@ Here we combine saccade and replay condition in one Plot
 ```{r}
 ggplot()+
   geom_point(data=ISSPR_prop_correct[common_subj_id != "all others"], 
-                         aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
-                             shape = fixreplay, 
-                             group = paste(experiment, sac_suppression_f)))+
-geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
-  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
-  geom_line(size = 1.5, alpha = 0.8) + 
-  geom_point(size = 2.5) + 
-  theme_classic(base_size = 12.5) + ocimTheme() + 
-  coord_cartesian(ylim = c(0.45, 1)) + 
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
-  scale_shape_manual(values = c(15, 17)) + 
-  scale_y_continuous(expand = c(0,0)) + 
-  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
-  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
-       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
-  facet_wrap(~common_subj_id) +
- geom_point(data= issp12_prop_correct[common_subj_id != "all others"], 
-                         aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
-                             shape = fixreplay, 
-                             group = paste(experiment_f, color_yes_f)))+ 
+             aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                 shape = fixreplay, 
+                 group = paste(experiment, sac_suppression_f)))+
   geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
   geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
-  geom_line(size = 1.5, alpha = 0.8) + 
-  geom_point(size = 2.5) + 
+  geom_line(data=ISSPR_prop_correct[common_subj_id != "all others"], 
+             aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                 linetype = fixreplay, 
+                 group = paste(experiment, sac_suppression_f)), 
+            size = 1.5, alpha = 0.8) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+  geom_point(data= issp12_prop_correct[common_subj_id != "all others"], 
+             aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                 shape = fixreplay, 
+                 group = paste(experiment_f, color_yes_f)))+ 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+  geom_line(data= issp12_prop_correct[common_subj_id != "all others"], 
+             aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                 linetype = fixreplay,
+                 group = paste(experiment_f, color_yes_f)), 
+            size = 1.5, alpha = 0.8) + 
   theme_classic(base_size = 12.5) + ocimTheme() + 
   coord_cartesian(ylim = c(0.45, 1)) + 
   scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
   scale_shape_manual(values = c(15, 17)) + 
   scale_y_continuous(expand = c(0,0)) + 
-  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20)) + 
   labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
-       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task", 
+       linetype = "Task") + 
   facet_wrap(~common_subj_id)
 
 ```
@@ -437,6 +442,8 @@ geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +
 Here we start with statistic differences between saccade/replay condition
 First: within subject (VP (N=9) data from Exp 1&2 + Replay)
 ```{r}
+# PLEASE TRY AGAIN WITH RICHARD's EXPLANATIONS ON SLACK. 
+# you could start with the "replay-exp1exp2-within" design
 
 #Problem ist, dass ich Proband:innen habe, bei denen für bestimmte Faktorstufen von stim_dur_ms Werte in ‘correct’ fehlen.
 # habe hier keine Daten mit common_subj_id == 4 oder common_subj_id == 5 im Datenframe für Experiment 1 & 2
