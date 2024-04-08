@@ -451,7 +451,7 @@ table(issp12_color_correct$common)
 table(issp$experiment, issp$common_subj_id)
 table(issp$stim_dur_ms_f)
 stim_dur_subset_issp12 <- factor(c(8.33, 16.67, 25, 33.33, 41.67, 50, 58.33))
-common_subj_id_subset_issp12 <- issp[issp$common_subj_id <3 & issp$experiment<3, 
+common_subj_id_subset_issp12 <- issp12_prop_correct[common_subj_id <3 & experiment<3, 
                                      by= .(common_subj_id)]
 
 
@@ -459,7 +459,7 @@ common_subj_id_subset_issp12 <- issp[issp$common_subj_id <3 & issp$experiment<3,
 table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
 table(ISSPR_data_without_overlap_metrics$stim_dur)
 stim_dur_subset_replay <- factor(c(33.33, 41.67, 50, 58.33))
-common_subj_id_subset_ISSPR <- ISSPR_data_without_overlap_metrics[common_subj_id & experiment=4,
+common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id & experiment==4,
                                         by=.(common_subj_id)]
 
 
