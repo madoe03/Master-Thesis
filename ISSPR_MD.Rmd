@@ -142,9 +142,9 @@ table(ISSPR_data_without_overlap_metrics$subj_id.x=="2", useNA = "ifany")
 ###END
 
 #first we will have the three P. which were tested for Experiment 1 and 2; Replay
-issp[experiment==2 & subj_id=="10", common_subj_id := "1"]
-issp[experiment==1 & subj_id=="20", common_subj_id := "1"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="P2", common_subj_id := "1"]
+issp[experiment==2 & subj_id=="10", common_subj_id := "01"]
+issp[experiment==1 & subj_id=="20", common_subj_id := "01"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P2", common_subj_id := "01"]
 
 issp[experiment==2 & subj_id=="20", common_subj_id := "2"]
 issp[experiment==1 & subj_id=="19", common_subj_id := "2"]
@@ -445,31 +445,34 @@ First: within subject (VP (N=9) data from Exp 1&2 + Replay)
 # PLEASE TRY AGAIN WITH RICHARD's EXPLANATIONS ON SLACK. 
 # you could start with the "replay-exp1exp2-within" design
 
-#Problem ist, dass ich Proband:innen habe, bei denen für bestimmte Faktorstufen von stim_dur_ms Werte in ‘correct’ fehlen.
-# habe hier keine Daten mit common_subj_id == 4 oder common_subj_id == 5 im Datenframe für Experiment 1 & 2
-complete( issp12_prop_correct, common_subj_id, stim_dur_ms, fill= list( correct = NA ) )
-issp12_prop_correct$stim_dur_ms <-factor(issp12_prop_correct$stim_dur_ms)
-issp12_prop_correct$common_subj_id <-factor(issp12_prop_correct$common_subj_id)
+#NEW Try from Mara:
+# Exp 1&2, common_subj_id = 1-3
+table(issp12_color_correct$common)
+table(issp$experiment, issp$common_subj_id)
+table(issp$stim_dur_ms_f)
+stim_dur_subset_issp12 <- factor(c(8.33, 16.67, 25, 33.33, 41.67, 50, 58.33))
+common_subj_id_subset_issp12 <- issp[issp$common_subj_id <3 & issp$experiment<3, 
+                                     by= .(common_subj_id)]
 
-anov_issp12<- ezANOVA(data = issp12_prop_correct, 
-        dv = .(correct), wid = .(common_subj_id), 
-        within = .(stim_dur_ms))
+
+# Replay Experiment=4, common_subj_id = 1-9
+table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
+table(ISSPR_data_without_overlap_metrics$stim_dur)
+stim_dur_subset_replay <- factor(c(33.33, 41.67, 50, 58.33))
+common_subj_id_subset_ISSPR <- ISSPR_data_without_overlap_metrics[common_subj_id & experiment=4,
+                                        by=.(common_subj_id)]
 
 
-anov_replay<- ezANOVA(data = ISSPR_prop_correct, 
-        dv = .(correct), wid = .(common_subj_id), 
-        within = .(stim_dur_ms))
+
+subset_ISSPexperiments <- rbind(common_subj_id_subset_issp12 , common_subj_id_subset_ISSPR)
+
 
 ```
 
 Here we start with statistic for the others N=11; between- subject design
 ```{r}
 
-ezANOVA(data = issp12_prop_correct, 
-        wid = .(common_subj_id), dv = .(correct), within = .(stim_dur_ms), between = .(common_subj_id == "all others"))
 
-ezANOVA(data = ISSPR_prop_correct, 
-        wid = .(common_subj_id), dv = .(correct), within = .(stim_dur_ms), between = .(common_subj_id == "all others"))
 
 ```
 
