@@ -440,32 +440,43 @@ ggplot()+
 ```
 
 Here we start with statistic differences between saccade/replay condition
-First: within subject (VP (N=9) data from Exp 1&2 + Replay)
+First: within subject (VP (N=9) data from Exp 2 + Replay)
 ```{r}
-# PLEASE TRY AGAIN WITH RICHARD's EXPLANATIONS ON SLACK. 
-# you could start with the "replay-exp1exp2-within" design
-
-#NEW Try from Mara:
-# Exp 1&2, common_subj_id = 1-3
-table(issp12_color_correct$common)
+# okay, below we merge the data of Experiment 2 and Replay (n=9)
 table(issp$experiment, issp$common_subj_id)
 table(issp$stim_dur_ms_f)
-stim_dur_subset_issp12 <- factor(c(8.33, 16.67, 25, 33.33, 41.67, 50, 58.33))
-common_subj_id_subset_issp12 <- issp12_prop_correct[common_subj_id <3 & experiment<3, 
-                                     by= .(common_subj_id)]
-
+common_subj_id_subset_issp12 <- issp12_prop_correct[common_subj_id!="all others" & stim_dur_ms < 60 & 
+                                                      experiment_f == "2"]
+table(common_subj_id_subset_issp12$experiment, common_subj_id_subset_issp12$common_subj_id)
+table(common_subj_id_subset_issp12$stim_dur_ms, common_subj_id_subset_issp12$common_subj_id)
 
 # Replay Experiment=4, common_subj_id = 1-9
 table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
 table(ISSPR_data_without_overlap_metrics$stim_dur)
-stim_dur_subset_replay <- factor(c(33.33, 41.67, 50, 58.33))
-common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id & experiment==4,
-                                        by=.(common_subj_id)]
+ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
+common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id!="all others" & 
+                                                    stim_dur_ms > 30 & stim_dur_ms < 60 & 
+                                                    sac_suppression_f=="unfiltered"] # choose condition here!
+table(common_subj_id_subset_ISSPR$experiment, common_subj_id_subset_ISSPR$common_subj_id)
+table(common_subj_id_subset_ISSPR$stim_dur_ms, common_subj_id_subset_ISSPR$common_subj_id)
 
+# combine the two sets to perform an ANOVA
+subset_ISSPexperiments <- rbindlist(list(common_subj_id_subset_issp12 , common_subj_id_subset_ISSPR), 
+                                    fill = TRUE)
+# verify that all conditions are comparable (we need one value in each cell)
+table(subset_ISSPexperiments$common_subj_id, subset_ISSPexperiments$stim_dur_ms, 
+      subset_ISSPexperiments$fixreplay, useNA = "ifany")
 
+# create discrete factor for ANOVA, otherwise it would be coded as numeric
+subset_ISSPexperiments[ , stim_dur_ms_f := ordered(stim_dur_ms)]
 
-subset_ISSPexperiments <- rbind(common_subj_id_subset_issp12 , common_subj_id_subset_ISSPR)
-
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+# plot to evaluate ANOVA results
+ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), 
+       x = .(stim_dur_ms_f), split = .(fixreplay))
 
 ```
 
