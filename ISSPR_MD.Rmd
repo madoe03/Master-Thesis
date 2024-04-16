@@ -442,7 +442,7 @@ ggplot()+
 Here we start with statistic differences between saccade/replay condition
 First: within subject (VP (N=9) data from Exp 2 + Replay)
 ```{r}
-# okay, below we merge the data of Experiment 2 and Replay (n=9)
+# okay, below we merge the data of Experiment 2 and Replay (n=9) with unfiltered condition
 table(issp$experiment, issp$common_subj_id)
 table(issp$stim_dur_ms_f)
 common_subj_id_subset_issp12 <- issp12_prop_correct[common_subj_id!="all others" & stim_dur_ms < 60 & 
@@ -480,8 +480,106 @@ ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct),
 
 ```
 
-Here we start with statistic for the others N=11; between- subject design
+Here we start with statistic for N=9; Replay (Exp=4) and Exp. 2 with filtered condition
 ```{r}
+ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric
+subset_ISSPexperiments[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id!="all others" & 
+                                                    stim_dur_ms > 30 & stim_dur_ms < 60 & 
+                                                    sac_suppression_f=="filtered"] # choose condition
+
+
+subset_ISSPexperiments <- rbindlist(list(common_subj_id_subset_issp12 , common_subj_id_subset_ISSPR), 
+                                    fill = TRUE)
+
+table(subset_ISSPexperiments$common_subj_id, subset_ISSPexperiments$stim_dur_ms, 
+      subset_ISSPexperiments$fixreplay, useNA = "ifany")
+
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+
+ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), 
+       x = .(stim_dur_ms_f), split = .(fixreplay))
+
+```
+Subj. not in both conditions; between design N=11
+```{r}
+common_subj_id_subset_issp12_bw <- issp12_prop_correct[common_subj_id== "all others" & stim_dur_ms < 60 & experiment_f == "2"]
+table(common_subj_id_subset_issp12_bw$experiment, common_subj_id_subset_issp12_bw$common_subj_id)
+table(common_subj_id_subset_issp12_bw$stim_dur_ms, common_subj_id_subset_issp12_bw$common_subj_id)
+
+
+table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
+table(ISSPR_data_without_overlap_metrics$stim_dur)
+ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
+common_subj_id_subset_ISSPR_bw <- ISSPR_prop_correct[common_subj_id=="all others" & 
+                                                    stim_dur_ms > 30 & stim_dur_ms < 60 & 
+                                                    sac_suppression_f=="unfiltered"] # choose condition here!
+table(common_subj_id_subset_ISSPR_bw$experiment, common_subj_id_subset_ISSPR_bw$common_subj_id)
+table(common_subj_id_subset_ISSPR_bw$stim_dur_ms, common_subj_id_subset_ISSPR_bw$common_subj_id)
+
+# combine the two sets to perform an ANOVA
+subset_ISSPexperiments_bw <- rbindlist(list(common_subj_id_subset_issp12_bw , common_subj_id_subset_ISSPR_bw), 
+                                    fill = TRUE)
+
+# verify that all conditions are comparable (we need one value in each cell)
+table(subset_ISSPexperiments_bw$common_subj_id, subset_ISSPexperiments_bw$stim_dur_ms, 
+      subset_ISSPexperiments_bw$fixreplay, useNA = "ifany")
+
+# create discrete factor for ANOVA, otherwise it would be coded as numeric
+subset_ISSPexperiments_bw[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments_bw, wid = .(common_subj_id), dv = .(correct), 
+       between = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+
+# plot to evaluate ANOVA results
+ezPlot(data = subset_ISSPexperiments_bw, wid = .(common_subj_id), dv = .(correct), 
+       between = .(fixreplay, stim_dur_ms_f), 
+       x = .(stim_dur_ms_f), split = .(fixreplay))
+```
+
+Here we start "replay-ISSP 1& 2 -within": N=3 mit Faktor stim_dur_ms (8.33-58.33, 7 levels)
+```{r}
+
+common_subj_id_subset_issp1 <- issp12_prop_correct[common_subj_id!="all others" & stim_dur_ms < 60 & 
+                                                      experiment_f == "1"]
+
+common_subj_id_subset_issp2 <- issp12_prop_correct[common_subj_id!="all others" &                                                          stim_dur_ms < 60 & experiment_f == "2"]
+
+table(common_subj_id_subset_issp1$experiment, common_subj_id_subset_issp1$common_subj_id)
+table(common_subj_id_subset_issp1$stim_dur_ms, common_subj_id_subset_issp1$common_subj_id)
+
+table(common_subj_id_subset_issp2$experiment, common_subj_id_subset_issp2$common_subj_id)
+table(common_subj_id_subset_issp2$stim_dur_ms, common_subj_id_subset_issp2$common_subj_id)
+
+ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
+
+common_subj_id_subset_ISSPR_wid <- ISSPR_prop_correct[common_subj_id=="all others" & 
+                                                    stim_dur_ms > 8 & stim_dur_ms < 60 & 
+                                                    sac_suppression_f=="unfiltered"] # choose condition here!
+table(common_subj_id_subset_ISSPR_wid$experiment, common_subj_id_subset_ISSPR_wid$common_subj_id)
+table(common_subj_id_subset_ISSPR_wid$stim_dur_ms, common_subj_id_subset_ISSPR_wid$common_subj_id)
+
+# combine the two sets to perform an ANOVA
+subset_ISSPexperiments_wid <- rbindlist(list(common_subj_id_subset_issp1 ,common_subj_id_subset_issp2, common_subj_id_subset_ISSPR_wid), 
+                                    fill = TRUE)
+
+subset_ISSPexperiments_wid[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+
+# here I make smth wrong like above (between design); ANOVA did not work 
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments_wid, wid = .(common_subj_id), dv = .(correct), 
+       within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+
+# plot to evaluate ANOVA results
+ezPlot(data = subset_ISSPexperiments_wid, wid = .(common_subj_id), dv = .(correct), 
+       within = .(fixreplay, stim_dur_ms_f), 
+       x = .(stim_dur_ms_f), split = .(fixreplay))
+
+
 
 
 
