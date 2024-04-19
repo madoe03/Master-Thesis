@@ -173,6 +173,35 @@ ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="08", common_subj_id := "9"]
 
+#here we create ID's for "all others" N=11); only for ISSPR
+View (ISSPR_data_without_overlap_metrics)
+ISSPR_data_without_overlap_metrics[subj_id.x=="15", common_subj_id := "15"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="16", common_subj_id := "16"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="19", common_subj_id := "19"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="11", common_subj_id := "11"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="12", common_subj_id := "12"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="17", common_subj_id := "17"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="21", common_subj_id := "21"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="22", common_subj_id := "22"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="P6", common_subj_id := "6"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="13", common_subj_id := "13"]
+ISSPR_data_without_overlap_metrics[subj_id.x=="18", common_subj_id := "18"]
+
+ISSPR_allothers_correct <- ISSPR_data_without_overlap_metrics[experiment==4, 
+                             .(correct = mean(correct), 
+                               replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
+                             by = .(experiment, common_subj_id, sac_suppression_f, stim_dur)] 
+
+ISSPR_allothers_correct[ , stim_dur := ordered(stim_dur)]
+ISSPR_allothers_correct[ , gm_correct := mean(correct), by = .(experiment)]
+ISSPR_allothers_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, common_subj_id)]
+
+ISSPR_allothers_correct[is.na(common_subj_id), common_subj_id := "all others"]
+table(ISSPR_allothers_correct$common_subj_id, ISSPR_allothers_correct$experiment, useNA="ifany")
+
+```
+```
+{r}
 # check saccade experiments
 table(issp$experiment, issp$common_subj_id)
 # check replay experiment
@@ -513,8 +542,9 @@ table(common_subj_id_subset_issp12_bw$stim_dur_ms, common_subj_id_subset_issp12_
 
 table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
 table(ISSPR_data_without_overlap_metrics$stim_dur)
-ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
-common_subj_id_subset_ISSPR_bw <- ISSPR_prop_correct[common_subj_id=="all others" & 
+
+ISSPR_allothers_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
+common_subj_id_subset_ISSPR_bw <- ISSPR_allothers_correct[common_subj_id=="all others" & 
                                                     stim_dur_ms > 30 & stim_dur_ms < 60 & 
                                                     sac_suppression_f=="unfiltered"] # choose condition here!
 table(common_subj_id_subset_ISSPR_bw$experiment, common_subj_id_subset_ISSPR_bw$common_subj_id)
