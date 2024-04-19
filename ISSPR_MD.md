@@ -239,16 +239,43 @@ Preparing data file
 setDT(ISSPR_data_without_overlap_metrics)
 ISSPR_data_without_overlap_metrics <- ISSPR_data_without_overlap_metrics[!is.na(resp)]
 issp[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+table(issp$stim_dur_ms, issp$stim_dur_ms_f)
+```
+
+    ##        
+    ##         8.33 16.67   25 33.33 41.67   50 58.33 66.67
+    ##   8.33  4572     0    0     0     0    0     0     0
+    ##   16.67    0  5041    0     0     0    0     0     0
+    ##   25       0     0 5358     0     0    0     0     0
+    ##   33.33    0     0    0  9279     0    0     0     0
+    ##   41.67    0     0    0     0  5379    0     0     0
+    ##   50       0     0    0     0     0 5490     0     0
+    ##   58.33    0     0    0     0     0    0  5481     0
+    ##   66.67    0     0    0     0     0    0     0  1619
+
+``` r
 issp[ , experiment_f := factor(experiment)]
 ```
 
 Stimulus Duration changes to numeric
 
 ``` r
-ISSPR_data_without_overlap_metrics$stim_dur <- as.character(ISSPR_data_without_overlap_metrics$stim_dur)
-ISSPR_data_without_overlap_metrics[ , stim_dur := as.numeric(as.character(stim_dur))]
-ISSPR_data_without_overlap_metrics[ , stim_dur := ordered(round(stim_dur, 2))]
+ISSPR_data_without_overlap_metrics[ , stim_dur_ms := round(stim_dur, 2)]
+ISSPR_data_without_overlap_metrics[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+table(ISSPR_data_without_overlap_metrics$stim_dur_ms, ISSPR_data_without_overlap_metrics$stim_dur_ms_f)
 ```
+
+    ##        
+    ##         8.33 16.67   25 33.33 41.67   50 58.33 66.67   75
+    ##   8.33  3553     0    0     0     0    0     0     0    0
+    ##   16.67    0  3525    0     0     0    0     0     0    0
+    ##   25       0     0 3519     0     0    0     0     0    0
+    ##   33.33    0     0    0  3499     0    0     0     0    0
+    ##   41.67    0     0    0     0  3474    0     0     0    0
+    ##   50       0     0    0     0     0 3486     0     0    0
+    ##   58.33    0     0    0     0     0    0  3505     0    0
+    ##   66.67    0     0    0     0     0    0     0  3493    0
+    ##   75       0     0    0     0     0    0     0     0 3463
 
 Here we start with the common_subj_id for Experiment 2 und Reply
 Experiment
@@ -318,6 +345,22 @@ ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="08", common_subj_id := "9"]
 
+
+## this will mess up all the existing merging code up to this point:
+# #here we create ID's for "all others" N=11); only for ISSPR
+# View (ISSPR_data_without_overlap_metrics)
+# ISSPR_data_without_overlap_metrics[subj_id.x=="15", common_subj_id := "15"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="16", common_subj_id := "16"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="19", common_subj_id := "19"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="11", common_subj_id := "11"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="12", common_subj_id := "12"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="17", common_subj_id := "17"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="21", common_subj_id := "21"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="22", common_subj_id := "22"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="P6", common_subj_id := "6"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="13", common_subj_id := "13"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="18", common_subj_id := "18"]
+
 # check saccade experiments
 table(issp$experiment, issp$common_subj_id)
 ```
@@ -345,9 +388,7 @@ figure2_xlim_issp12 <- c(-50, 25)
 issp12_color_correct <- issp[experiment<3,# & sac_dur_prob>=0.4 & sac_dur_prob<=0.6, 
                              .(correct = mean(correct), 
                                sac_display_off_latency = mean(sac_display_off_latency)), 
-                             by = .(experiment_f, subj_id, color_yes_f, stim_dur_ms)]
-
-issp12_color_correct[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+                             by = .(experiment_f, subj_id, color_yes_f, stim_dur_ms, stim_dur_ms_f)]
 issp12_color_correct[ , gm_correct := mean(correct), by = .(experiment_f)]
 issp12_color_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment_f, subj_id)]
 issp12_color_correct_agg <- issp12_color_correct[ , 
@@ -355,7 +396,7 @@ issp12_color_correct_agg <- issp12_color_correct[ ,
                                                     correct_se = sd(correct.w) / sqrt(length(correct.w)), 
                                                     sac_display_off_latency = mean(sac_display_off_latency), 
                                                     sac_display_off_latency_sd = sd(sac_display_off_latency) / sqrt(length(sac_display_off_latency)) ), 
-                                                  by = .(experiment_f, color_yes_f, stim_dur_ms)]
+                                                  by = .(experiment_f, color_yes_f, stim_dur_ms, stim_dur_ms_f)]
 # plot the time course for the different scenes
 p_issp12_color <- ggplot(data = issp12_color_correct_agg, 
                          aes(x = sac_display_off_latency, y = correct, color = color_yes_f, 
@@ -398,9 +439,7 @@ Here we start with the Prop. Correct for ISSP 1&2; by common_subj_id
 issp12_prop_correct <- issp[experiment<3, 
                              .(correct = mean(correct), 
                                sac_display_off_latency = mean(sac_display_off_latency)), 
-                             by = .(experiment_f, subj_id, common_subj_id, color_yes_f, stim_dur_ms)]
-
-issp12_prop_correct[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+                             by = .(experiment_f, subj_id, common_subj_id, color_yes_f, stim_dur_ms, stim_dur_ms_f)]
 issp12_prop_correct[ , gm_correct := mean(correct), by = .(experiment_f)]
 issp12_prop_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment_f, common_subj_id)]
 issp12_prop_correct <- issp12_prop_correct[color_yes_f=="grayscale"]
@@ -437,7 +476,8 @@ issp12_prop_correct_agg <- issp12_prop_correct[ ,
                                                     sac_display_off_latency = mean(sac_display_off_latency), 
                                                     sac_display_off_latency_sd = sd(sac_display_off_latency) / sqrt(length(sac_display_off_latency)) ), 
                                                   by = .(common_subj_id_exists, 
-                                                         experiment_f, color_yes_f, stim_dur_ms, fixreplay, sac_suppression_f)]
+                                                         experiment_f, color_yes_f, stim_dur_ms, stim_dur_ms_f, 
+                                                         fixreplay, sac_suppression_f)]
 ```
 
 Here we create the Plot for Prop. Correct; ISSP 1&2 and Common_subj_id
@@ -506,12 +546,13 @@ Here we start making a plot that does the same for the Replay Experiment
 (for unfiltered vs suppression)
 
 ``` r
+# RICHARD: added subj_id.x here
 ISSPR_prop_correct <- ISSPR_data_without_overlap_metrics[experiment==4, 
                              .(correct = mean(correct), 
                                replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
-                             by = .(experiment, common_subj_id, sac_suppression_f, stim_dur)] 
+                             by = .(experiment, common_subj_id, subj_id.x, sac_suppression_f, 
+                                    stim_dur_ms, stim_dur_ms_f)] 
 
-ISSPR_prop_correct[ , stim_dur := ordered(stim_dur)]
 ISSPR_prop_correct[ , gm_correct := mean(correct), by = .(experiment)]
 ISSPR_prop_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, common_subj_id)]
 str(ISSPR_prop_correct$sac_suppression_f) # Richard: Why do you do this below? You already have the correct factor
@@ -532,17 +573,17 @@ table(ISSPR_prop_correct$common_subj_id, ISSPR_prop_correct$experiment, useNA="i
 ```
 
     ##       
-    ##         4
-    ##   01   18
-    ##   2    18
-    ##   3    18
-    ##   4    18
-    ##   5    18
-    ##   6    18
-    ##   7    18
-    ##   8    18
-    ##   9    18
-    ##   <NA> 18
+    ##          4
+    ##   01    18
+    ##   2     18
+    ##   3     18
+    ##   4     18
+    ##   5     18
+    ##   6     18
+    ##   7     18
+    ##   8     18
+    ##   9     18
+    ##   <NA> 198
 
 ``` r
 ISSPR_prop_correct[is.na(common_subj_id), common_subj_id := "all others"]
@@ -561,7 +602,23 @@ table(ISSPR_data_without_overlap_metrics$common_subj_id, useNA = "ifany")
 # in this variable we code whether participants have a common_subj_id or not
 ISSPR_prop_correct[common_subj_id == "all others", common_subj_id_exists_replay := "unmatched"]
 ISSPR_prop_correct[common_subj_id != "all others", common_subj_id_exists_replay := "matched"]
+table(ISSPR_prop_correct$common_subj_id, ISSPR_prop_correct$common_subj_id_exists_replay, useNA = "ifany")
+```
 
+    ##             
+    ##              matched unmatched
+    ##   01              18         0
+    ##   2               18         0
+    ##   3               18         0
+    ##   4               18         0
+    ##   5               18         0
+    ##   6               18         0
+    ##   7               18         0
+    ##   8               18         0
+    ##   9               18         0
+    ##   all others       0       198
+
+``` r
 # Replay: population-level aggregate
 ISSPR_prop_correct_agg <- ISSPR_prop_correct[ , 
                                                   .(correct = mean(correct.w), 
@@ -569,127 +626,126 @@ ISSPR_prop_correct_agg <- ISSPR_prop_correct[ ,
                                                     replay_sac_display_off_latency = mean(replay_sac_display_off_latency), 
                                                     replay_sac_display_off_latency_sd = sd(replay_sac_display_off_latency) /
                                                       sqrt(length(replay_sac_display_off_latency)) ), 
-                                                  by = .(common_subj_id_exists_replay, experiment, stim_dur, fixreplay, sac_suppression_f)]
+                                                  by = .(common_subj_id_exists_replay, experiment, 
+                                                         stim_dur_ms, stim_dur_ms_f, fixreplay,
+                                                         sac_suppression_f)]
 ISSPR_prop_correct_agg
 ```
 
-    ##     common_subj_id_exists_replay experiment stim_dur       fixreplay
-    ##                           <char>      <num>    <ord>          <char>
-    ##  1:                      matched          4     8.33 Replay (Exp. 4)
-    ##  2:                    unmatched          4     8.33 Replay (Exp. 4)
-    ##  3:                    unmatched          4    16.67 Replay (Exp. 4)
-    ##  4:                    unmatched          4       25 Replay (Exp. 4)
-    ##  5:                      matched          4       25 Replay (Exp. 4)
-    ##  6:                      matched          4       25 Replay (Exp. 4)
-    ##  7:                      matched          4    33.33 Replay (Exp. 4)
-    ##  8:                      matched          4     8.33 Replay (Exp. 4)
-    ##  9:                    unmatched          4    33.33 Replay (Exp. 4)
-    ## 10:                      matched          4    33.33 Replay (Exp. 4)
-    ## 11:                    unmatched          4    33.33 Replay (Exp. 4)
-    ## 12:                    unmatched          4     8.33 Replay (Exp. 4)
-    ## 13:                      matched          4    16.67 Replay (Exp. 4)
-    ## 14:                      matched          4    16.67 Replay (Exp. 4)
-    ## 15:                    unmatched          4       25 Replay (Exp. 4)
-    ## 16:                    unmatched          4    16.67 Replay (Exp. 4)
-    ## 17:                      matched          4    41.67 Replay (Exp. 4)
-    ## 18:                      matched          4       75 Replay (Exp. 4)
-    ## 19:                      matched          4    41.67 Replay (Exp. 4)
-    ## 20:                    unmatched          4    41.67 Replay (Exp. 4)
-    ## 21:                      matched          4       50 Replay (Exp. 4)
-    ## 22:                      matched          4       75 Replay (Exp. 4)
-    ## 23:                    unmatched          4       75 Replay (Exp. 4)
-    ## 24:                    unmatched          4       50 Replay (Exp. 4)
-    ## 25:                      matched          4    66.67 Replay (Exp. 4)
-    ## 26:                      matched          4    58.33 Replay (Exp. 4)
-    ## 27:                    unmatched          4    58.33 Replay (Exp. 4)
-    ## 28:                      matched          4    58.33 Replay (Exp. 4)
-    ## 29:                      matched          4    66.67 Replay (Exp. 4)
-    ## 30:                    unmatched          4    66.67 Replay (Exp. 4)
-    ## 31:                    unmatched          4    41.67 Replay (Exp. 4)
-    ## 32:                    unmatched          4    66.67 Replay (Exp. 4)
-    ## 33:                      matched          4       50 Replay (Exp. 4)
-    ## 34:                    unmatched          4       50 Replay (Exp. 4)
-    ## 35:                    unmatched          4       75 Replay (Exp. 4)
-    ## 36:                    unmatched          4    58.33 Replay (Exp. 4)
-    ##     common_subj_id_exists_replay experiment stim_dur       fixreplay
-    ##     sac_suppression_f   correct  correct_se replay_sac_display_off_latency
-    ##                <fctr>     <num>       <num>                          <num>
-    ##  1:        unfiltered 0.7828670 0.014539821                    -43.3154141
-    ##  2:        unfiltered 0.7809487          NA                    -42.3258045
-    ##  3:          filtered 0.6094695          NA                    -35.5128512
-    ##  4:          filtered 0.5954929          NA                    -31.5686275
-    ##  5:          filtered 0.5825778 0.018415973                    -30.9882047
-    ##  6:        unfiltered 0.6946713 0.012088971                    -28.8276221
-    ##  7:        unfiltered 0.7178762 0.016587998                    -19.7079238
-    ##  8:          filtered 0.6292098 0.015186752                    -43.0968044
-    ##  9:        unfiltered 0.7099735          NA                    -18.9671014
-    ## 10:          filtered 0.5967165 0.011713229                    -20.1817776
-    ## 11:          filtered 0.5962894          NA                    -19.8408333
-    ## 12:          filtered 0.6175214          NA                    -42.5105350
-    ## 13:          filtered 0.5726184 0.011736693                    -35.7369589
-    ## 14:        unfiltered 0.7279465 0.019383411                    -37.2390760
-    ## 15:        unfiltered 0.6883721          NA                    -28.4540764
-    ## 16:        unfiltered 0.7131399          NA                    -36.7448607
-    ## 17:          filtered 0.6088197 0.020141439                    -10.3471551
-    ## 18:          filtered 0.9165286 0.011872347                     24.0633392
-    ## 19:        unfiltered 0.7005088 0.014707593                    -10.9344098
-    ## 20:        unfiltered 0.7186147          NA                    -11.0414788
-    ## 21:        unfiltered 0.8137267 0.014946156                     -0.1110145
-    ## 22:        unfiltered 0.9406576 0.013921111                     24.1633110
-    ## 23:        unfiltered 0.9753616          NA                     24.4667084
-    ## 24:        unfiltered 0.7650394          NA                     -0.8968750
-    ## 25:        unfiltered 0.8994683 0.005499234                     14.7947322
-    ## 26:          filtered 0.7908965 0.013225435                      6.2164785
-    ## 27:          filtered 0.7437671          NA                      5.9673967
-    ## 28:        unfiltered 0.8226426 0.012828090                      6.4939714
-    ## 29:          filtered 0.8553576 0.014581958                     16.2520720
-    ## 30:          filtered 0.8528306          NA                     15.8728157
-    ## 31:          filtered 0.6101063          NA                    -11.1601887
-    ## 32:        unfiltered 0.9069902          NA                     14.2906679
-    ## 33:          filtered 0.7018671 0.022343590                     -0.4542593
-    ## 34:          filtered 0.6889978          NA                     -1.4229167
-    ## 35:          filtered 0.9229276          NA                     24.7573065
-    ## 36:        unfiltered 0.8591139          NA                      6.8965984
-    ##     sac_suppression_f   correct  correct_se replay_sac_display_off_latency
-    ##     replay_sac_display_off_latency_sd
-    ##                                 <num>
-    ##  1:                         0.3705094
-    ##  2:                                NA
-    ##  3:                                NA
-    ##  4:                                NA
-    ##  5:                         0.9200203
-    ##  6:                         0.4100485
-    ##  7:                         0.4864622
-    ##  8:                         0.3420216
-    ##  9:                                NA
-    ## 10:                         0.6148157
-    ## 11:                                NA
-    ## 12:                                NA
-    ## 13:                         0.4424707
-    ## 14:                         0.5578372
-    ## 15:                                NA
-    ## 16:                                NA
-    ## 17:                         0.2639504
-    ## 18:                         0.4948247
-    ## 19:                         0.3964592
-    ## 20:                                NA
-    ## 21:                         0.4396266
-    ## 22:                         0.3389586
-    ## 23:                                NA
-    ## 24:                                NA
-    ## 25:                         0.6174367
-    ## 26:                         0.7361479
-    ## 27:                                NA
-    ## 28:                         0.5323409
-    ## 29:                         0.7573837
-    ## 30:                                NA
-    ## 31:                                NA
-    ## 32:                                NA
-    ## 33:                         0.6212758
-    ## 34:                                NA
-    ## 35:                                NA
-    ## 36:                                NA
-    ##     replay_sac_display_off_latency_sd
+    ##     common_subj_id_exists_replay experiment stim_dur_ms stim_dur_ms_f
+    ##  1:                      matched          4        8.33          8.33
+    ##  2:                    unmatched          4        8.33          8.33
+    ##  3:                    unmatched          4       16.67         16.67
+    ##  4:                    unmatched          4       25.00            25
+    ##  5:                      matched          4       25.00            25
+    ##  6:                      matched          4       25.00            25
+    ##  7:                      matched          4       33.33         33.33
+    ##  8:                      matched          4        8.33          8.33
+    ##  9:                    unmatched          4       33.33         33.33
+    ## 10:                      matched          4       33.33         33.33
+    ## 11:                    unmatched          4       33.33         33.33
+    ## 12:                    unmatched          4        8.33          8.33
+    ## 13:                      matched          4       16.67         16.67
+    ## 14:                      matched          4       16.67         16.67
+    ## 15:                    unmatched          4       25.00            25
+    ## 16:                    unmatched          4       16.67         16.67
+    ## 17:                      matched          4       41.67         41.67
+    ## 18:                      matched          4       75.00            75
+    ## 19:                      matched          4       41.67         41.67
+    ## 20:                    unmatched          4       41.67         41.67
+    ## 21:                      matched          4       50.00            50
+    ## 22:                      matched          4       75.00            75
+    ## 23:                    unmatched          4       75.00            75
+    ## 24:                    unmatched          4       50.00            50
+    ## 25:                      matched          4       66.67         66.67
+    ## 26:                      matched          4       58.33         58.33
+    ## 27:                    unmatched          4       58.33         58.33
+    ## 28:                      matched          4       58.33         58.33
+    ## 29:                      matched          4       66.67         66.67
+    ## 30:                    unmatched          4       66.67         66.67
+    ## 31:                    unmatched          4       41.67         41.67
+    ## 32:                    unmatched          4       66.67         66.67
+    ## 33:                      matched          4       50.00            50
+    ## 34:                    unmatched          4       50.00            50
+    ## 35:                    unmatched          4       75.00            75
+    ## 36:                    unmatched          4       58.33         58.33
+    ##     common_subj_id_exists_replay experiment stim_dur_ms stim_dur_ms_f
+    ##           fixreplay sac_suppression_f   correct  correct_se
+    ##  1: Replay (Exp. 4)        unfiltered 0.7495851 0.014539821
+    ##  2: Replay (Exp. 4)        unfiltered 0.7476863 0.029646619
+    ##  3: Replay (Exp. 4)          filtered 0.5764213 0.013401528
+    ##  4: Replay (Exp. 4)          filtered 0.5619891 0.017860628
+    ##  5: Replay (Exp. 4)          filtered 0.5492959 0.018415973
+    ##  6: Replay (Exp. 4)        unfiltered 0.6613894 0.012088971
+    ##  7: Replay (Exp. 4)        unfiltered 0.6845943 0.016587998
+    ##  8: Replay (Exp. 4)          filtered 0.5959279 0.015186752
+    ##  9: Replay (Exp. 4)        unfiltered 0.6764028 0.024823452
+    ## 10: Replay (Exp. 4)          filtered 0.5634346 0.011713229
+    ## 11: Replay (Exp. 4)          filtered 0.5630514 0.013372048
+    ## 12: Replay (Exp. 4)          filtered 0.5851201 0.014736135
+    ## 13: Replay (Exp. 4)          filtered 0.5393365 0.011736693
+    ## 14: Replay (Exp. 4)        unfiltered 0.6946646 0.019383411
+    ## 15: Replay (Exp. 4)        unfiltered 0.6556087 0.026987222
+    ## 16: Replay (Exp. 4)        unfiltered 0.6799909 0.026846487
+    ## 17: Replay (Exp. 4)          filtered 0.5755378 0.020141439
+    ## 18: Replay (Exp. 4)          filtered 0.8832467 0.011872347
+    ## 19: Replay (Exp. 4)        unfiltered 0.6672269 0.014707593
+    ## 20: Replay (Exp. 4)        unfiltered 0.6850637 0.029024054
+    ## 21: Replay (Exp. 4)        unfiltered 0.7804448 0.014946156
+    ## 22: Replay (Exp. 4)        unfiltered 0.9073757 0.013921111
+    ## 23: Replay (Exp. 4)        unfiltered 0.9418721 0.011446481
+    ## 24: Replay (Exp. 4)        unfiltered 0.7314513 0.026244587
+    ## 25: Replay (Exp. 4)        unfiltered 0.8661864 0.005499234
+    ## 26: Replay (Exp. 4)          filtered 0.7576146 0.013225435
+    ## 27: Replay (Exp. 4)          filtered 0.7103676 0.026344757
+    ## 28: Replay (Exp. 4)        unfiltered 0.7893607 0.012828090
+    ## 29: Replay (Exp. 4)          filtered 0.8220757 0.014581958
+    ## 30: Replay (Exp. 4)          filtered 0.8194528 0.029277704
+    ## 31: Replay (Exp. 4)          filtered 0.5766983 0.017536711
+    ## 32: Replay (Exp. 4)        unfiltered 0.8736925 0.023858965
+    ## 33: Replay (Exp. 4)          filtered 0.6685852 0.022343590
+    ## 34: Replay (Exp. 4)          filtered 0.6561418 0.024321748
+    ## 35: Replay (Exp. 4)          filtered 0.8894614 0.021455029
+    ## 36: Replay (Exp. 4)        unfiltered 0.8254103 0.024282351
+    ##           fixreplay sac_suppression_f   correct  correct_se
+    ##     replay_sac_display_off_latency replay_sac_display_off_latency_sd
+    ##  1:                    -43.3154141                         0.3705094
+    ##  2:                    -42.3318116                         0.2883880
+    ##  3:                    -35.5117064                         0.4122946
+    ##  4:                    -31.5600815                         0.4947230
+    ##  5:                    -30.9882047                         0.9200203
+    ##  6:                    -28.8276221                         0.4100485
+    ##  7:                    -19.7079238                         0.4864622
+    ##  8:                    -43.0968044                         0.3420216
+    ##  9:                    -18.9664383                         0.4070679
+    ## 10:                    -20.1817776                         0.6148157
+    ## 11:                    -19.8405498                         0.2982914
+    ## 12:                    -42.5083169                         0.4172745
+    ## 13:                    -35.7369589                         0.4424707
+    ## 14:                    -37.2390760                         0.5578372
+    ## 15:                    -28.4627179                         0.5561391
+    ## 16:                    -36.7497265                         0.4670724
+    ## 17:                    -10.3471551                         0.2639504
+    ## 18:                     24.0633392                         0.4948247
+    ## 19:                    -10.9344098                         0.3964592
+    ## 20:                    -11.0463405                         0.3521261
+    ## 21:                     -0.1110145                         0.4396266
+    ## 22:                     24.1633110                         0.3389586
+    ## 23:                     24.4740997                         0.4934006
+    ## 24:                     -0.8733318                         0.4108166
+    ## 25:                     14.7947322                         0.6174367
+    ## 26:                      6.2164785                         0.7361479
+    ## 27:                      5.9728118                         0.6466634
+    ## 28:                      6.4939714                         0.5323409
+    ## 29:                     16.2520720                         0.7573837
+    ## 30:                     15.8919704                         0.7947639
+    ## 31:                    -11.1563790                         0.3402765
+    ## 32:                     14.3012344                         0.4386188
+    ## 33:                     -0.4542593                         0.6212758
+    ## 34:                     -1.4193474                         0.4337604
+    ## 35:                     24.7578276                         0.4974431
+    ## 36:                      6.8960082                         0.1313367
+    ##     replay_sac_display_off_latency replay_sac_display_off_latency_sd
 
 Here we create the Plot for Prop. Correct; ISSP Replay and
 common_subj_id
@@ -754,7 +810,7 @@ ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
 ISSPR_prop
 ```
 
-    ## Warning: Removed 18 rows containing missing values or values outside the scale range
+    ## Warning: Removed 1 row containing missing values or values outside the scale range
     ## (`geom_errorbarh()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-15-1.svg)<!-- -->
@@ -802,21 +858,22 @@ ggplot()+
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-16-1.svg)<!-- -->
 
 Here we start with statistic differences between saccade/replay
-condition First: within subject (VP (N=9) data from Exp 2 + Replay)
+condition First: within subject (VP (N=9) data from Exp 2 + Replay) for
+the UNFILTERED condition.
 
 ``` r
-# okay, below we merge the data of Experiment 2 and Replay (n=9)
-table(issp$experiment, issp$common_subj_id)
+# okay, below we merge the data of Experiment 2 and Replay (n=9) with unfiltered condition
+table(issp$experiment, issp$common_subj_id, useNA = "ifany")
 ```
 
     ##    
-    ##       01    2    3    4    5    6    7    8    9
-    ##   1 1015 1057 1231    0    0    0    0    0    0
-    ##   2  796  822  679  585  820  589  815 1078  849
-    ##   3    0    0    0    0    0    0    0    0    0
+    ##        01     2     3     4     5     6     7     8     9  <NA>
+    ##   1  1015  1057  1231     0     0     0     0     0     0 10999
+    ##   2   796   822   679   585   820   589   815  1078   849  8197
+    ##   3     0     0     0     0     0     0     0     0     0 12687
 
 ``` r
-table(issp$stim_dur_ms_f)
+table(issp$stim_dur_ms_f, useNA = "ifany")
 ```
 
     ## 
@@ -826,7 +883,7 @@ table(issp$stim_dur_ms_f)
 ``` r
 common_subj_id_subset_issp12 <- issp12_prop_correct[common_subj_id!="all others" & stim_dur_ms < 60 & 
                                                       experiment_f == "2"]
-table(common_subj_id_subset_issp12$experiment, common_subj_id_subset_issp12$common_subj_id)
+table(common_subj_id_subset_issp12$experiment, common_subj_id_subset_issp12$common_subj_id, useNA = "ifany")
 ```
 
     ##    
@@ -836,7 +893,7 @@ table(common_subj_id_subset_issp12$experiment, common_subj_id_subset_issp12$comm
     ##   3  0 0 0 0 0 0 0 0 0
 
 ``` r
-table(common_subj_id_subset_issp12$stim_dur_ms, common_subj_id_subset_issp12$common_subj_id)
+table(common_subj_id_subset_issp12$stim_dur_ms, common_subj_id_subset_issp12$common_subj_id, useNA = "ifany")
 ```
 
     ##        
@@ -848,15 +905,24 @@ table(common_subj_id_subset_issp12$stim_dur_ms, common_subj_id_subset_issp12$com
 
 ``` r
 # Replay Experiment=4, common_subj_id = 1-9
-table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
+table(ISSPR_prop_correct$experiment, ISSPR_prop_correct$common_subj_id, 
+      ISSPR_prop_correct$common_subj_id_exists_replay, useNA = "ifany")
 ```
 
+    ## , ,  = matched
+    ## 
     ##    
-    ##       01    2    3    4    5    6    7    8    9
-    ##   4 1607 1469 1594 1551 1607 1595 1545 1586 1566
+    ##      01   2   3   4   5   6   7   8   9 all others
+    ##   4  18  18  18  18  18  18  18  18  18          0
+    ## 
+    ## , ,  = unmatched
+    ## 
+    ##    
+    ##      01   2   3   4   5   6   7   8   9 all others
+    ##   4   0   0   0   0   0   0   0   0   0        198
 
 ``` r
-table(ISSPR_data_without_overlap_metrics$stim_dur)
+table(ISSPR_data_without_overlap_metrics$stim_dur_ms, useNA = "ifany")
 ```
 
     ## 
@@ -864,7 +930,6 @@ table(ISSPR_data_without_overlap_metrics$stim_dur)
     ##  3553  3525  3519  3499  3474  3486  3505  3493  3463
 
 ``` r
-ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
 common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id!="all others" & 
                                                     stim_dur_ms > 30 & stim_dur_ms < 60 & 
                                                     sac_suppression_f=="unfiltered"] # choose condition here!
@@ -924,9 +989,6 @@ table(subset_ISSPexperiments$common_subj_id, subset_ISSPexperiments$stim_dur_ms,
     ##   9      1     1  1     1
 
 ``` r
-# create discrete factor for ANOVA, otherwise it would be coded as numeric
-subset_ISSPexperiments[ , stim_dur_ms_f := ordered(stim_dur_ms)]
-
 # perform ANOVA
 ezANOVA(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
@@ -935,6 +997,9 @@ ezANOVA(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct),
     ## Warning: Converting "common_subj_id" to factor for ANOVA.
 
     ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
 
     ## $ANOVA
     ##                    Effect DFn DFd          SSn        SSd          F
@@ -972,10 +1037,474 @@ ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct),
 
     ## Warning: Converting "fixreplay" to factor for ANOVA.
 
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-17-1.svg)<!-- -->
 
-Here we start with statistic for the others N=11; between- subject
-design
+Here we start with statistic for N=9; Replay (Exp=4) and Exp. 2 with
+FILTERED condition
+
+``` r
+common_subj_id_subset_ISSPR_filt <- ISSPR_prop_correct[common_subj_id!="all others" & 
+                                                         stim_dur_ms > 30 & stim_dur_ms < 60 & 
+                                                         sac_suppression_f=="filtered"] # choose condition
+
+# okay, merge
+subset_ISSPexperiments_filt <- rbindlist(list(common_subj_id_subset_issp12, 
+                                              common_subj_id_subset_ISSPR_filt), 
+                                         fill = TRUE)
+# make sure we have the variable stim_dur_ms_f for ANOVA in both frames
+table(subset_ISSPexperiments_filt$common_subj_id, subset_ISSPexperiments_filt$stim_dur_ms_f, 
+      subset_ISSPexperiments_filt$fixreplay, useNA = "ifany")
+```
+
+    ## , ,  = Replay (Exp. 4)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    0     0  0     1     1  1     1     0  0
+    ##   2     0     0  0     1     1  1     1     0  0
+    ##   3     0     0  0     1     1  1     1     0  0
+    ##   4     0     0  0     1     1  1     1     0  0
+    ##   5     0     0  0     1     1  1     1     0  0
+    ##   6     0     0  0     1     1  1     1     0  0
+    ##   7     0     0  0     1     1  1     1     0  0
+    ##   8     0     0  0     1     1  1     1     0  0
+    ##   9     0     0  0     1     1  1     1     0  0
+    ## 
+    ## , ,  = Saccade (Exp. 1&2)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    0     0  0     1     1  1     1     0  0
+    ##   2     0     0  0     1     1  1     1     0  0
+    ##   3     0     0  0     1     1  1     1     0  0
+    ##   4     0     0  0     1     1  1     1     0  0
+    ##   5     0     0  0     1     1  1     1     0  0
+    ##   6     0     0  0     1     1  1     1     0  0
+    ##   7     0     0  0     1     1  1     1     0  0
+    ##   8     0     0  0     1     1  1     1     0  0
+    ##   9     0     0  0     1     1  1     1     0  0
+
+``` r
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+    ## $ANOVA
+    ##                    Effect DFn DFd          SSn        SSd           F
+    ## 1             (Intercept)   1   8 38.793899183 0.32163416 964.9198679
+    ## 2               fixreplay   1   8  0.195553937 0.02968323  52.7042233
+    ## 3           stim_dur_ms_f   3  24  0.441893574 0.08853607  39.9289064
+    ## 4 fixreplay:stim_dur_ms_f   3  24  0.003935175 0.04851879   0.6488496
+    ##              p p<.05         ges
+    ## 1 1.254132e-09     * 0.987567617
+    ## 2 8.722228e-05     * 0.285928421
+    ## 3 1.733073e-09     * 0.475018601
+    ## 4 5.913563e-01       0.007993329
+    ## 
+    ## $`Mauchly's Test for Sphericity`
+    ##                    Effect         W         p p<.05
+    ## 3           stim_dur_ms_f 0.4672714 0.4068884      
+    ## 4 fixreplay:stim_dur_ms_f 0.5084917 0.4782709      
+    ## 
+    ## $`Sphericity Corrections`
+    ##                    Effect       GGe        p[GG] p[GG]<.05      HFe
+    ## 3           stim_dur_ms_f 0.7125989 2.680490e-07         * 0.980301
+    ## 4 fixreplay:stim_dur_ms_f 0.7590384 5.534563e-01           1.077198
+    ##          p[HF] p[HF]<.05
+    ## 3 2.445534e-09         *
+    ## 4 5.913563e-01
+
+``` r
+ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), 
+       x = .(stim_dur_ms_f), split = .(fixreplay))
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-18-1.svg)<!-- -->
+
+Subj. not in both conditions; between design N=11
+
+``` r
+# not-common subjects in saccade exp
+common_subj_id_subset_issp12_bw <- issp12_prop_correct[common_subj_id== "all others" & 
+                                                         stim_dur_ms < 60 & experiment_f == "2"]
+# recode the subj_id
+common_subj_id_subset_issp12_bw[ , subj_id := as.character(as.numeric(as.ordered(subj_id)))] # 1-11
+table(common_subj_id_subset_issp12_bw$experiment, common_subj_id_subset_issp12_bw$subj_id, 
+      common_subj_id_subset_issp12_bw$common_subj_id)
+```
+
+    ## , ,  = all others
+    ## 
+    ##    
+    ##     1 10 11 2 3 4 5 6 7 8 9
+    ##   1 0  0  0 0 0 0 0 0 0 0 0
+    ##   2 4  4  4 4 4 4 4 4 4 4 4
+    ##   3 0  0  0 0 0 0 0 0 0 0 0
+
+``` r
+table(common_subj_id_subset_issp12_bw$stim_dur_ms, common_subj_id_subset_issp12_bw$subj_id)
+```
+
+    ##        
+    ##         1 10 11 2 3 4 5 6 7 8 9
+    ##   33.33 1  1  1 1 1 1 1 1 1 1 1
+    ##   41.67 1  1  1 1 1 1 1 1 1 1 1
+    ##   50    1  1  1 1 1 1 1 1 1 1 1
+    ##   58.33 1  1  1 1 1 1 1 1 1 1 1
+
+``` r
+# not-common subjects in replay exp
+ISSPR_data_without_overlap_metrics[ , subj_id := subj_id.x]
+table(ISSPR_data_without_overlap_metrics$stim_dur_ms, ISSPR_data_without_overlap_metrics$subj_id)
+```
+
+    ##        
+    ##          08  11  12  13  15  16  17  18  19  20  21  22  P1  P2  P3  P4  P5  P6
+    ##   8.33  174 179 177 179 179 179 173 177 178 179 180 174 180 180 174 179 178 179
+    ##   16.67 175 175 175 170 180 173 177 178 174 179 179 177 179 178 169 177 178 179
+    ##   25    177 178 178 176 177 177 169 178 175 177 178 175 177 178 168 178 171 177
+    ##   33.33 172 180 172 170 178 175 166 177 176 178 178 176 179 179 164 178 170 178
+    ##   41.67 176 179 174 172 180 179 167 173 169 176 178 172 179 178 160 172 164 178
+    ##   50    175 178 174 169 180 176 170 173 173 172 176 174 180 178 167 178 170 177
+    ##   58.33 174 177 178 178 180 179 170 172 176 176 177 179 179 179 154 178 174 178
+    ##   66.67 173 180 177 176 178 175 170 176 173 174 177 175 179 179 158 179 174 177
+    ##   75    170 179 178 173 179 172 161 170 177 175 180 177 175 178 155 176 172 177
+    ##        
+    ##          P7  P9
+    ##   8.33  179 176
+    ##   16.67 180 173
+    ##   25    180 175
+    ##   33.33 178 175
+    ##   41.67 180 168
+    ##   50    177 169
+    ##   58.33 172 175
+    ##   66.67 173 170
+    ##   75    175 164
+
+``` r
+ISSPR_allothers_correct <- ISSPR_data_without_overlap_metrics[is.na(common_subj_id) & # only those who do not have a common subj id
+                                                                experiment==4 &
+                                                                stim_dur_ms > 30 & stim_dur_ms < 60, 
+                             .(correct = mean(correct), 
+                               replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
+                             by = .(experiment, subj_id, sac_suppression_f, stim_dur_ms, stim_dur_ms_f)] 
+ISSPR_allothers_correct$fixreplay <- "Replay (Exp. 4)"
+# recode the subj_id
+ISSPR_allothers_correct[ , subj_id := as.character(as.numeric(as.ordered(subj_id)))] # 1-11
+table(ISSPR_allothers_correct$stim_dur_ms, ISSPR_allothers_correct$subj_id)
+```
+
+    ##        
+    ##         1 10 11 2 3 4 5 6 7 8 9
+    ##   33.33 2  2  2 2 2 2 2 2 2 2 2
+    ##   41.67 2  2  2 2 2 2 2 2 2 2 2
+    ##   50    2  2  2 2 2 2 2 2 2 2 2
+    ##   58.33 2  2  2 2 2 2 2 2 2 2 2
+
+``` r
+# within-subj variance here
+ISSPR_allothers_correct[ , gm_correct := mean(correct), by = .(experiment)]
+ISSPR_allothers_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, subj_id)]
+
+# combine the two sets to perform an ANOVA, 
+# DECIDE HERE WHETHER ORIGINAL OR FILTERED IMAGES SHOULD BE COMPARED WITH SACCADE CONDITION (original vs suppressed)
+subset_ISSPexperiments_bw <- rbindlist(list(common_subj_id_subset_issp12_bw, 
+                                            ISSPR_allothers_correct[sac_suppression_f=="original"]), 
+                                    fill = TRUE)
+
+# verify that all conditions are comparable and we have the same number of (independent) subjects
+table(subset_ISSPexperiments_bw$subj_id, subset_ISSPexperiments_bw$stim_dur_ms, 
+      subset_ISSPexperiments_bw$fixreplay, useNA = "ifany")
+```
+
+    ## , ,  = Replay (Exp. 4)
+    ## 
+    ##     
+    ##      33.33 41.67 50 58.33
+    ##   1      1     1  1     1
+    ##   10     1     1  1     1
+    ##   11     1     1  1     1
+    ##   2      1     1  1     1
+    ##   3      1     1  1     1
+    ##   4      1     1  1     1
+    ##   5      1     1  1     1
+    ##   6      1     1  1     1
+    ##   7      1     1  1     1
+    ##   8      1     1  1     1
+    ##   9      1     1  1     1
+    ## 
+    ## , ,  = Saccade (Exp. 1&2)
+    ## 
+    ##     
+    ##      33.33 41.67 50 58.33
+    ##   1      1     1  1     1
+    ##   10     1     1  1     1
+    ##   11     1     1  1     1
+    ##   2      1     1  1     1
+    ##   3      1     1  1     1
+    ##   4      1     1  1     1
+    ##   5      1     1  1     1
+    ##   6      1     1  1     1
+    ##   7      1     1  1     1
+    ##   8      1     1  1     1
+    ##   9      1     1  1     1
+
+``` r
+# convert subj_id to factor
+subset_ISSPexperiments_bw[ , subj_id := factor(subj_id)]
+subset_ISSPexperiments_bw[ , fixreplay_f := factor(fixreplay)]
+subset_ISSPexperiments_bw[ , stim_dur_ms_f := droplevels(stim_dur_ms_f)]
+table(subset_ISSPexperiments_bw$subj_id, subset_ISSPexperiments_bw$stim_dur_ms_f)
+```
+
+    ##     
+    ##      33.33 41.67 50 58.33
+    ##   1      2     2  2     2
+    ##   10     2     2  2     2
+    ##   11     2     2  2     2
+    ##   2      2     2  2     2
+    ##   3      2     2  2     2
+    ##   4      2     2  2     2
+    ##   5      2     2  2     2
+    ##   6      2     2  2     2
+    ##   7      2     2  2     2
+    ##   8      2     2  2     2
+    ##   9      2     2  2     2
+
+``` r
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct), 
+        between = .(fixreplay), 
+        within = .(stim_dur_ms_f), 
+        detailed = TRUE)
+```
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: The column supplied as the wid variable contains non-unique values
+    ## across levels of the supplied between-Ss variables. Automatically fixing this
+    ## by generating unique wid labels.
+
+    ## $ANOVA
+    ##                    Effect DFn DFd         SSn       SSd            F
+    ## 1             (Intercept)   1  20 46.65504055 0.4454751 2094.6193003
+    ## 2               fixreplay   1  20  0.08890154 0.4454751    3.9913131
+    ## 3           stim_dur_ms_f   3  60  0.33969987 0.1325967   51.2380514
+    ## 4 fixreplay:stim_dur_ms_f   3  60  0.00474857 0.1325967    0.7162424
+    ##              p p<.05         ges
+    ## 1 1.013566e-21     * 0.987761301
+    ## 2 5.951845e-02       0.133290981
+    ## 3 1.503396e-16     * 0.370135471
+    ## 4 5.461552e-01       0.008147569
+    ## 
+    ## $`Mauchly's Test for Sphericity`
+    ##                    Effect         W         p p<.05
+    ## 3           stim_dur_ms_f 0.7406776 0.3455237      
+    ## 4 fixreplay:stim_dur_ms_f 0.7406776 0.3455237      
+    ## 
+    ## $`Sphericity Corrections`
+    ##                    Effect      GGe        p[GG] p[GG]<.05     HFe        p[HF]
+    ## 3           stim_dur_ms_f 0.826185 4.691670e-14         * 0.95216 7.294976e-16
+    ## 4 fixreplay:stim_dur_ms_f 0.826185 5.218574e-01           0.95216 5.398963e-01
+    ##   p[HF]<.05
+    ## 3         *
+    ## 4
+
+``` r
+# plot to evaluate ANOVA results
+ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct), 
+       between = .(fixreplay), within = .(stim_dur_ms_f),
+       x = .(stim_dur_ms_f), split = .(fixreplay))
+```
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: The column supplied as the wid variable contains non-unique values
+    ## across levels of the supplied between-Ss variables. Automatically fixing this
+    ## by generating unique wid labels.
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-19-1.svg)<!-- -->
+
+``` r
+ezStats(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct), 
+        between = .(fixreplay), within = .(stim_dur_ms_f))
+```
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: The column supplied as the wid variable contains non-unique values
+    ## across levels of the supplied between-Ss variables. Automatically fixing this
+    ## by generating unique wid labels.
+
+    ##            fixreplay stim_dur_ms_f  N      Mean         SD       FLSD
+    ## 1    Replay (Exp. 4)         33.33 11 0.6431648 0.08233008 0.04009628
+    ## 2    Replay (Exp. 4)         41.67 11 0.6518257 0.09626190 0.04009628
+    ## 3    Replay (Exp. 4)            50 11 0.6982133 0.08704345 0.04009628
+    ## 4    Replay (Exp. 4)         58.33 11 0.7921723 0.08053545 0.04009628
+    ## 5 Saccade (Exp. 1&2)         33.33 11 0.6863913 0.07041609 0.04009628
+    ## 6 Saccade (Exp. 1&2)         41.67 11 0.7140745 0.08143001 0.04009628
+    ## 7 Saccade (Exp. 1&2)            50 11 0.7829378 0.09635762 0.04009628
+    ## 8 Saccade (Exp. 1&2)         58.33 11 0.8562472 0.08261966 0.04009628
+
+TO DO: do the above for original vs suppressed conditions
+
+Here we start “replay-ISSP 1& 2 -within”: N=3 mit Faktor stim_dur_ms
+(8.33-58.33, 7 levels). So who are the subjects that were tested in all
+three experiments? It’s 1-3 by the definition at the top!
+
+``` r
+# saccade experiments
+common_three_sac <- issp12_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                          stim_dur_ms < 60]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33
+    ##   01    1     1  1     2     1  1     1
+    ##   2     1     1  1     2     1  1     1
+    ##   3     1     1  1     2     1  1     1
+
+``` r
+# as you can see now, people have 2 values at 33.33 - we can take the average here
+common_three_sac <- common_three_sac[ , .(correct = mean(correct)), 
+                                      by = .(fixreplay, common_subj_id, stim_dur_ms, stim_dur_ms_f)]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33
+    ##   01    1     1  1     1     1  1     1
+    ##   2     1     1  1     1     1  1     1
+    ##   3     1     1  1     1     1  1     1
+
+``` r
+# replay experiments
+common_three_replay <- ISSPR_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                            stim_dur_ms < 60 & 
+                                            sac_suppression_f=="unfiltered"] # choose condition here!
+table(common_three_replay$common_subj_id, common_three_replay$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33
+    ##   01    1     1  1     1     1  1     1
+    ##   2     1     1  1     1     1  1     1
+    ##   3     1     1  1     1     1  1     1
+
+``` r
+# combine the two sets to perform an ANOVA
+common_three <- rbindlist(list(common_three_sac, common_three_replay), 
+                                    fill = TRUE)
+table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixreplay)
+```
+
+    ## , ,  = Replay (Exp. 4)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    1     1  1     1     1  1     1     0  0
+    ##   2     1     1  1     1     1  1     1     0  0
+    ##   3     1     1  1     1     1  1     1     0  0
+    ## 
+    ## , ,  = Saccade (Exp. 1&2)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    1     1  1     1     1  1     1     0  0
+    ##   2     1     1  1     1     1  1     1     0  0
+    ##   3     1     1  1     1     1  1     1     0  0
+
+``` r
+# here I make smth wrong like above (between design); ANOVA did not work 
+# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
+## perform ANOVA
+# use type 1 ANOVA, as we have too little subjects for assumption tests
+ezANOVA(data = common_three, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE, type = 1)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+    ## $ANOVA
+    ##                    Effect DFn DFd         SSn          SSd          F
+    ## 1               fixreplay   1   2 0.008731779 0.0004308559 40.5322498
+    ## 2           stim_dur_ms_f   6  12 0.180568000 0.0368773078  9.7929058
+    ## 3 fixreplay:stim_dur_ms_f   6  12 0.017022981 0.0413268781  0.8238213
+    ##              p p<.05        ges
+    ## 1 0.0237946637     * 0.09994388
+    ## 2 0.0004868949     * 0.69662763
+    ## 3 0.5727981027       0.17795664
+
+``` r
+# plot to evaluate ANOVA results
+ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct), 
+       within = .(fixreplay, stim_dur_ms_f), 
+       x = .(stim_dur_ms_f), split = .(fixreplay), type = 1)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-20-1.svg)<!-- -->
+
+``` r
+ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), type = 1)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+    ##             fixreplay stim_dur_ms_f N      Mean         SD      FLSD
+    ## 1     Replay (Exp. 4)          8.33 3 0.7974457 0.08129952 0.1043999
+    ## 2     Replay (Exp. 4)         16.67 3 0.7725530 0.05067860 0.1043999
+    ## 3     Replay (Exp. 4)            25 3 0.7061728 0.05358650 0.1043999
+    ## 4     Replay (Exp. 4)         33.33 3 0.7410893 0.08751352 0.1043999
+    ## 5     Replay (Exp. 4)         41.67 3 0.7435411 0.05932505 0.1043999
+    ## 6     Replay (Exp. 4)            50 3 0.8540886 0.02083377 0.1043999
+    ## 7     Replay (Exp. 4)         58.33 3 0.8738430 0.06193796 0.1043999
+    ## 8  Saccade (Exp. 1&2)          8.33 3 0.8345406 0.01182088 0.1043999
+    ## 9  Saccade (Exp. 1&2)         16.67 3 0.7301539 0.05510774 0.1043999
+    ## 10 Saccade (Exp. 1&2)            25 3 0.7595795 0.06326436 0.1043999
+    ## 11 Saccade (Exp. 1&2)         33.33 3 0.7218498 0.07649657 0.1043999
+    ## 12 Saccade (Exp. 1&2)         41.67 3 0.8052246 0.11523644 0.1043999
+    ## 13 Saccade (Exp. 1&2)            50 3 0.8900838 0.07063030 0.1043999
+    ## 14 Saccade (Exp. 1&2)         58.33 3 0.9491634 0.04428949 0.1043999
+
+TO DO: do the above for unfiltered vs filtered conditions
 
 Preparing for “proportion correct” by subject
 
@@ -985,7 +1514,6 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
 ```
 
     ##     subj_id.x prop_correct
-    ##        <char>        <num>
     ##  1:        P3    0.7760381
     ##  2:        15    0.6921167
     ##  3:        19    0.6021642
@@ -1006,7 +1534,6 @@ ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
     ## 18:        P5    0.6557060
     ## 19:        P4    0.7485893
     ## 20:        P9    0.8330097
-    ##     subj_id.x prop_correct
 
 ``` r
 prop_correct_subj_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)), by = .(subj_id.x, sac_suppression_f, stim_dur)][order(subj_id.x, sac_suppression_f, stim_dur)]
@@ -1027,7 +1554,7 @@ p_prop_correct_subj_replay <- ggplot(data = prop_correct_subj_replay,
 p_prop_correct_subj_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-20-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-22-1.svg)<!-- -->
 
 Here we will run the ezANOVA 1 for proportion correct
 
@@ -1116,7 +1643,7 @@ prop_replay_plot <- ggplot(data = p_correct_replay, aes(x = stim_dur, y = P_mean
 prop_replay_plot
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-23-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-25-1.svg)<!-- -->
 
 Here we will create BINS for the latency
 
@@ -1146,7 +1673,7 @@ p_prop_correct_subj_bins_replay <- ggplot(data = prop_correct_subj_bins_replay,
 p_prop_correct_subj_bins_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-25-1.svg)<!-- --> Here we
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-27-1.svg)<!-- --> Here we
 will have the ezANOVA 2 for the BINS
 
 ``` r
@@ -1230,7 +1757,7 @@ prop_bins_replay <- ggplot(data = p_correct_bins_replay,
 prop_bins_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-28-1.svg)<!-- --> Here we
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-30-1.svg)<!-- --> Here we
 will run some other des. statistics
 
 ``` r
@@ -1241,20 +1768,25 @@ ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
 
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
+    ## Warning: "stim_dur" will be treated as numeric.
+
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
     ## of the full design, you must use the "within_full" argument, else results may
     ## be inaccurate.
 
-    ##   stim_dur  N     Mean        SD      FLSD
-    ## 1     8.33 20 8.845138 0.1726913 0.1168101
-    ## 2    16.67 20 8.937816 0.1397880 0.1168101
-    ## 3       25 20 8.869960 0.1663857 0.1168101
-    ## 4    33.33 20 9.060644 0.2405516 0.1168101
-    ## 5    41.67 20 9.321213 0.2206385 0.1168101
-    ## 6       50 20 9.310555 0.1593640 0.1168101
-    ## 7    58.33 20 9.252517 0.2083374 0.1168101
-    ## 8    66.67 20 9.197438 0.2020838 0.1168101
-    ## 9       75 20 9.277307 0.1485654 0.1168101
+    ## Warning: There is at least one numeric within variable, therefore aov() will be
+    ## used for computation and no assumption checks will be obtained.
+
+    ##    stim_dur  N     Mean        SD      FLSD
+    ## 1  8.333333 20 8.845138 0.1726913 0.1233542
+    ## 2 16.666667 20 8.937816 0.1397880 0.1233542
+    ## 3 25.000000 20 8.869960 0.1663857 0.1233542
+    ## 4 33.333333 20 9.060644 0.2405516 0.1233542
+    ## 5 41.666667 20 9.321213 0.2206385 0.1233542
+    ## 6 50.000000 20 9.310555 0.1593640 0.1233542
+    ## 7 58.333333 20 9.252517 0.2083374 0.1233542
+    ## 8 66.666667 20 9.197438 0.2020838 0.1233542
+    ## 9 75.000000 20 9.277307 0.1485654 0.1233542
 
 ``` r
 ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"], 
@@ -1264,20 +1796,25 @@ ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
 
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
+    ## Warning: "stim_dur" will be treated as numeric.
+
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
     ## of the full design, you must use the "within_full" argument, else results may
     ## be inaccurate.
 
-    ##   stim_dur  N     Mean        SD      FLSD
-    ## 1     8.33 20 59.94793 0.8543478 0.6507833
-    ## 2    16.67 20 61.90245 0.7700641 0.6507833
-    ## 3       25 20 63.83004 1.2932527 0.6507833
-    ## 4    33.33 20 62.03077 1.0490223 0.6507833
-    ## 5    41.67 20 61.88801 0.7538052 0.6507833
-    ## 6       50 20 60.07350 1.2177499 0.6507833
-    ## 7    58.33 20 61.18590 1.0949111 0.6507833
-    ## 8    66.67 20 60.58549 1.0407147 0.6507833
-    ## 9       75 20 59.89003 1.0427160 0.6507833
+    ## Warning: There is at least one numeric within variable, therefore aov() will be
+    ## used for computation and no assumption checks will be obtained.
+
+    ##    stim_dur  N     Mean        SD      FLSD
+    ## 1  8.333333 20 59.94793 0.8543478 0.7995613
+    ## 2 16.666667 20 61.90245 0.7700641 0.7995613
+    ## 3 25.000000 20 63.83004 1.2932527 0.7995613
+    ## 4 33.333333 20 62.03077 1.0490223 0.7995613
+    ## 5 41.666667 20 61.88801 0.7538052 0.7995613
+    ## 6 50.000000 20 60.07350 1.2177499 0.7995613
+    ## 7 58.333333 20 61.18590 1.0949111 0.7995613
+    ## 8 66.666667 20 60.58549 1.0407147 0.7995613
+    ## 9 75.000000 20 59.89003 1.0427160 0.7995613
 
 ``` r
 anov_replay_sac_dur <- ezANOVA(data = ISSPR_data_without_overlap_metrics[experiment=="4"], 
@@ -1287,9 +1824,14 @@ anov_replay_sac_dur <- ezANOVA(data = ISSPR_data_without_overlap_metrics[experim
 
     ## Warning: Converting "subj_id.x" to factor for ANOVA.
 
+    ## Warning: "stim_dur" will be treated as numeric.
+
     ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
     ## of the full design, you must use the "within_full" argument, else results may
     ## be inaccurate.
+
+    ## Warning: There is at least one numeric within variable, therefore aov() will be
+    ## used for computation and no assumption checks will be obtained.
 
 Here we will figure out the effect of suppression and the task
 
@@ -1342,7 +1884,7 @@ p_ISSPR_suppression <- ggplot(data = p_correct_suppression,
 p_ISSPR_suppression
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-31-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-33-1.svg)<!-- -->
 
 Here we will have two dimensions (saccade duration and saccade
 amplitude) for each subject by mean
@@ -1402,4 +1944,4 @@ ggplot(data = metrics_subj_bins_replay_dur,
   facet_wrap(~subj_id.x)
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-33-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-35-1.svg)<!-- -->

@@ -113,14 +113,15 @@ Preparing data file
 setDT(ISSPR_data_without_overlap_metrics)
 ISSPR_data_without_overlap_metrics <- ISSPR_data_without_overlap_metrics[!is.na(resp)]
 issp[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+table(issp$stim_dur_ms, issp$stim_dur_ms_f)
 issp[ , experiment_f := factor(experiment)]
 ```
 
 Stimulus Duration changes to numeric 
 ```{r}
-ISSPR_data_without_overlap_metrics$stim_dur <- as.character(ISSPR_data_without_overlap_metrics$stim_dur)
-ISSPR_data_without_overlap_metrics[ , stim_dur := as.numeric(as.character(stim_dur))]
-ISSPR_data_without_overlap_metrics[ , stim_dur := ordered(round(stim_dur, 2))]
+ISSPR_data_without_overlap_metrics[ , stim_dur_ms := round(stim_dur, 2)]
+ISSPR_data_without_overlap_metrics[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+table(ISSPR_data_without_overlap_metrics$stim_dur_ms, ISSPR_data_without_overlap_metrics$stim_dur_ms_f)
 ```
 
 Here we start with the common_subj_id for Experiment 2 und Reply Experiment 
@@ -173,35 +174,22 @@ ISSPR_data_without_overlap_metrics[subj_id.x=="20", common_subj_id := "8"]
 issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="08", common_subj_id := "9"]
 
-#here we create ID's for "all others" N=11); only for ISSPR
-View (ISSPR_data_without_overlap_metrics)
-ISSPR_data_without_overlap_metrics[subj_id.x=="15", common_subj_id := "15"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="16", common_subj_id := "16"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="19", common_subj_id := "19"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="11", common_subj_id := "11"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="12", common_subj_id := "12"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="17", common_subj_id := "17"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="21", common_subj_id := "21"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="22", common_subj_id := "22"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="P6", common_subj_id := "6"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="13", common_subj_id := "13"]
-ISSPR_data_without_overlap_metrics[subj_id.x=="18", common_subj_id := "18"]
 
-ISSPR_allothers_correct <- ISSPR_data_without_overlap_metrics[experiment==4, 
-                             .(correct = mean(correct), 
-                               replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
-                             by = .(experiment, common_subj_id, sac_suppression_f, stim_dur)] 
+## this will mess up all the existing merging code up to this point:
+# #here we create ID's for "all others" N=11); only for ISSPR
+# View (ISSPR_data_without_overlap_metrics)
+# ISSPR_data_without_overlap_metrics[subj_id.x=="15", common_subj_id := "15"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="16", common_subj_id := "16"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="19", common_subj_id := "19"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="11", common_subj_id := "11"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="12", common_subj_id := "12"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="17", common_subj_id := "17"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="21", common_subj_id := "21"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="22", common_subj_id := "22"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="P6", common_subj_id := "6"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="13", common_subj_id := "13"]
+# ISSPR_data_without_overlap_metrics[subj_id.x=="18", common_subj_id := "18"]
 
-ISSPR_allothers_correct[ , stim_dur := ordered(stim_dur)]
-ISSPR_allothers_correct[ , gm_correct := mean(correct), by = .(experiment)]
-ISSPR_allothers_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, common_subj_id)]
-
-ISSPR_allothers_correct[is.na(common_subj_id), common_subj_id := "all others"]
-table(ISSPR_allothers_correct$common_subj_id, ISSPR_allothers_correct$experiment, useNA="ifany")
-
-```
-```
-{r}
 # check saccade experiments
 table(issp$experiment, issp$common_subj_id)
 # check replay experiment
@@ -215,9 +203,7 @@ figure2_xlim_issp12 <- c(-50, 25)
 issp12_color_correct <- issp[experiment<3,# & sac_dur_prob>=0.4 & sac_dur_prob<=0.6, 
                              .(correct = mean(correct), 
                                sac_display_off_latency = mean(sac_display_off_latency)), 
-                             by = .(experiment_f, subj_id, color_yes_f, stim_dur_ms)]
-
-issp12_color_correct[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+                             by = .(experiment_f, subj_id, color_yes_f, stim_dur_ms, stim_dur_ms_f)]
 issp12_color_correct[ , gm_correct := mean(correct), by = .(experiment_f)]
 issp12_color_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment_f, subj_id)]
 issp12_color_correct_agg <- issp12_color_correct[ , 
@@ -225,7 +211,7 @@ issp12_color_correct_agg <- issp12_color_correct[ ,
                                                     correct_se = sd(correct.w) / sqrt(length(correct.w)), 
                                                     sac_display_off_latency = mean(sac_display_off_latency), 
                                                     sac_display_off_latency_sd = sd(sac_display_off_latency) / sqrt(length(sac_display_off_latency)) ), 
-                                                  by = .(experiment_f, color_yes_f, stim_dur_ms)]
+                                                  by = .(experiment_f, color_yes_f, stim_dur_ms, stim_dur_ms_f)]
 # plot the time course for the different scenes
 p_issp12_color <- ggplot(data = issp12_color_correct_agg, 
                          aes(x = sac_display_off_latency, y = correct, color = color_yes_f, 
@@ -257,9 +243,7 @@ Here we start with the Prop. Correct for ISSP 1&2; by common_subj_id
 issp12_prop_correct <- issp[experiment<3, 
                              .(correct = mean(correct), 
                                sac_display_off_latency = mean(sac_display_off_latency)), 
-                             by = .(experiment_f, subj_id, common_subj_id, color_yes_f, stim_dur_ms)]
-
-issp12_prop_correct[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+                             by = .(experiment_f, subj_id, common_subj_id, color_yes_f, stim_dur_ms, stim_dur_ms_f)]
 issp12_prop_correct[ , gm_correct := mean(correct), by = .(experiment_f)]
 issp12_prop_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment_f, common_subj_id)]
 issp12_prop_correct <- issp12_prop_correct[color_yes_f=="grayscale"]
@@ -280,7 +264,8 @@ issp12_prop_correct_agg <- issp12_prop_correct[ ,
                                                     sac_display_off_latency = mean(sac_display_off_latency), 
                                                     sac_display_off_latency_sd = sd(sac_display_off_latency) / sqrt(length(sac_display_off_latency)) ), 
                                                   by = .(common_subj_id_exists, 
-                                                         experiment_f, color_yes_f, stim_dur_ms, fixreplay, sac_suppression_f)]
+                                                         experiment_f, color_yes_f, stim_dur_ms, stim_dur_ms_f, 
+                                                         fixreplay, sac_suppression_f)]
 ```
 
 Here we create the Plot for Prop. Correct; ISSP 1&2 and Common_subj_id
@@ -338,12 +323,13 @@ p_issp12_prop
 
 Here we start making a plot that does the same for the Replay Experiment (for unfiltered vs suppression)
 ```{r}
+# RICHARD: added subj_id.x here
 ISSPR_prop_correct <- ISSPR_data_without_overlap_metrics[experiment==4, 
                              .(correct = mean(correct), 
                                replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
-                             by = .(experiment, common_subj_id, sac_suppression_f, stim_dur)] 
+                             by = .(experiment, common_subj_id, subj_id.x, sac_suppression_f, 
+                                    stim_dur_ms, stim_dur_ms_f)] 
 
-ISSPR_prop_correct[ , stim_dur := ordered(stim_dur)]
 ISSPR_prop_correct[ , gm_correct := mean(correct), by = .(experiment)]
 ISSPR_prop_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, common_subj_id)]
 str(ISSPR_prop_correct$sac_suppression_f) # Richard: Why do you do this below? You already have the correct factor
@@ -365,6 +351,7 @@ table(ISSPR_data_without_overlap_metrics$common_subj_id, useNA = "ifany")
 # in this variable we code whether participants have a common_subj_id or not
 ISSPR_prop_correct[common_subj_id == "all others", common_subj_id_exists_replay := "unmatched"]
 ISSPR_prop_correct[common_subj_id != "all others", common_subj_id_exists_replay := "matched"]
+table(ISSPR_prop_correct$common_subj_id, ISSPR_prop_correct$common_subj_id_exists_replay, useNA = "ifany")
 
 # Replay: population-level aggregate
 ISSPR_prop_correct_agg <- ISSPR_prop_correct[ , 
@@ -373,7 +360,9 @@ ISSPR_prop_correct_agg <- ISSPR_prop_correct[ ,
                                                     replay_sac_display_off_latency = mean(replay_sac_display_off_latency), 
                                                     replay_sac_display_off_latency_sd = sd(replay_sac_display_off_latency) /
                                                       sqrt(length(replay_sac_display_off_latency)) ), 
-                                                  by = .(common_subj_id_exists_replay, experiment, stim_dur, fixreplay, sac_suppression_f)]
+                                                  by = .(common_subj_id_exists_replay, experiment, 
+                                                         stim_dur_ms, stim_dur_ms_f, fixreplay,
+                                                         sac_suppression_f)]
 ISSPR_prop_correct_agg
 ```
 Here we create the Plot for Prop. Correct; ISSP Replay and common_subj_id
@@ -429,7 +418,7 @@ ISSPR_prop
 ```
 
 Here we combine saccade and replay condition in one Plot 
-```{r}
+```{r, fig.width=15, fig.height=7}
 ggplot()+
   geom_point(data=ISSPR_prop_correct[common_subj_id != "all others"], 
              aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
@@ -469,20 +458,20 @@ ggplot()+
 ```
 
 Here we start with statistic differences between saccade/replay condition
-First: within subject (VP (N=9) data from Exp 2 + Replay)
+First: within subject (VP (N=9) data from Exp 2 + Replay) for the UNFILTERED condition.
 ```{r}
 # okay, below we merge the data of Experiment 2 and Replay (n=9) with unfiltered condition
-table(issp$experiment, issp$common_subj_id)
-table(issp$stim_dur_ms_f)
+table(issp$experiment, issp$common_subj_id, useNA = "ifany")
+table(issp$stim_dur_ms_f, useNA = "ifany")
 common_subj_id_subset_issp12 <- issp12_prop_correct[common_subj_id!="all others" & stim_dur_ms < 60 & 
                                                       experiment_f == "2"]
-table(common_subj_id_subset_issp12$experiment, common_subj_id_subset_issp12$common_subj_id)
-table(common_subj_id_subset_issp12$stim_dur_ms, common_subj_id_subset_issp12$common_subj_id)
+table(common_subj_id_subset_issp12$experiment, common_subj_id_subset_issp12$common_subj_id, useNA = "ifany")
+table(common_subj_id_subset_issp12$stim_dur_ms, common_subj_id_subset_issp12$common_subj_id, useNA = "ifany")
 
 # Replay Experiment=4, common_subj_id = 1-9
-table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
-table(ISSPR_data_without_overlap_metrics$stim_dur)
-ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
+table(ISSPR_prop_correct$experiment, ISSPR_prop_correct$common_subj_id, 
+      ISSPR_prop_correct$common_subj_id_exists_replay, useNA = "ifany")
+table(ISSPR_data_without_overlap_metrics$stim_dur_ms, useNA = "ifany")
 common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id!="all others" & 
                                                     stim_dur_ms > 30 & stim_dur_ms < 60 & 
                                                     sac_suppression_f=="unfiltered"] # choose condition here!
@@ -496,9 +485,6 @@ subset_ISSPexperiments <- rbindlist(list(common_subj_id_subset_issp12 , common_s
 table(subset_ISSPexperiments$common_subj_id, subset_ISSPexperiments$stim_dur_ms, 
       subset_ISSPexperiments$fixreplay, useNA = "ifany")
 
-# create discrete factor for ANOVA, otherwise it would be coded as numeric
-subset_ISSPexperiments[ , stim_dur_ms_f := ordered(stim_dur_ms)]
-
 # perform ANOVA
 ezANOVA(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
@@ -509,111 +495,130 @@ ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct),
 
 ```
 
-Here we start with statistic for N=9; Replay (Exp=4) and Exp. 2 with filtered condition
+Here we start with statistic for N=9; Replay (Exp=4) and Exp. 2 with FILTERED condition
 ```{r}
-ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric
-subset_ISSPexperiments[ , stim_dur_ms_f := ordered(stim_dur_ms)]
-common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id!="all others" & 
-                                                    stim_dur_ms > 30 & stim_dur_ms < 60 & 
-                                                    sac_suppression_f=="filtered"] # choose condition
+common_subj_id_subset_ISSPR_filt <- ISSPR_prop_correct[common_subj_id!="all others" & 
+                                                         stim_dur_ms > 30 & stim_dur_ms < 60 & 
+                                                         sac_suppression_f=="filtered"] # choose condition
 
-
-subset_ISSPexperiments <- rbindlist(list(common_subj_id_subset_issp12 , common_subj_id_subset_ISSPR), 
-                                    fill = TRUE)
-
-table(subset_ISSPexperiments$common_subj_id, subset_ISSPexperiments$stim_dur_ms, 
-      subset_ISSPexperiments$fixreplay, useNA = "ifany")
+# okay, merge
+subset_ISSPexperiments_filt <- rbindlist(list(common_subj_id_subset_issp12, 
+                                              common_subj_id_subset_ISSPR_filt), 
+                                         fill = TRUE)
+# make sure we have the variable stim_dur_ms_f for ANOVA in both frames
+table(subset_ISSPexperiments_filt$common_subj_id, subset_ISSPexperiments_filt$stim_dur_ms_f, 
+      subset_ISSPexperiments_filt$fixreplay, useNA = "ifany")
 
 # perform ANOVA
-ezANOVA(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
+ezANOVA(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
 
-ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
+ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), 
        x = .(stim_dur_ms_f), split = .(fixreplay))
-
 ```
+
 Subj. not in both conditions; between design N=11
 ```{r}
-common_subj_id_subset_issp12_bw <- issp12_prop_correct[common_subj_id== "all others" & stim_dur_ms < 60 & experiment_f == "2"]
-table(common_subj_id_subset_issp12_bw$experiment, common_subj_id_subset_issp12_bw$common_subj_id)
-table(common_subj_id_subset_issp12_bw$stim_dur_ms, common_subj_id_subset_issp12_bw$common_subj_id)
+# not-common subjects in saccade exp
+common_subj_id_subset_issp12_bw <- issp12_prop_correct[common_subj_id== "all others" & 
+                                                         stim_dur_ms < 60 & experiment_f == "2"]
+# recode the subj_id
+common_subj_id_subset_issp12_bw[ , subj_id := as.character(as.numeric(as.ordered(subj_id)))] # 1-11
+table(common_subj_id_subset_issp12_bw$experiment, common_subj_id_subset_issp12_bw$subj_id, 
+      common_subj_id_subset_issp12_bw$common_subj_id)
+table(common_subj_id_subset_issp12_bw$stim_dur_ms, common_subj_id_subset_issp12_bw$subj_id)
 
+# not-common subjects in replay exp
+ISSPR_data_without_overlap_metrics[ , subj_id := subj_id.x]
+table(ISSPR_data_without_overlap_metrics$stim_dur_ms, ISSPR_data_without_overlap_metrics$subj_id)
+ISSPR_allothers_correct <- ISSPR_data_without_overlap_metrics[is.na(common_subj_id) & # only those who do not have a common subj id
+                                                                experiment==4 &
+                                                                stim_dur_ms > 30 & stim_dur_ms < 60, 
+                             .(correct = mean(correct), 
+                               replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
+                             by = .(experiment, subj_id, sac_suppression_f, stim_dur_ms, stim_dur_ms_f)] 
+ISSPR_allothers_correct$fixreplay <- "Replay (Exp. 4)"
+# recode the subj_id
+ISSPR_allothers_correct[ , subj_id := as.character(as.numeric(as.ordered(subj_id)))] # 1-11
+table(ISSPR_allothers_correct$stim_dur_ms, ISSPR_allothers_correct$subj_id)
+# within-subj variance here
+ISSPR_allothers_correct[ , gm_correct := mean(correct), by = .(experiment)]
+ISSPR_allothers_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, subj_id)]
 
-table(ISSPR_data_without_overlap_metrics$experiment, ISSPR_data_without_overlap_metrics$common_subj_id)
-table(ISSPR_data_without_overlap_metrics$stim_dur)
-
-ISSPR_allothers_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
-common_subj_id_subset_ISSPR_bw <- ISSPR_allothers_correct[common_subj_id=="all others" & 
-                                                    stim_dur_ms > 30 & stim_dur_ms < 60 & 
-                                                    sac_suppression_f=="unfiltered"] # choose condition here!
-table(common_subj_id_subset_ISSPR_bw$experiment, common_subj_id_subset_ISSPR_bw$common_subj_id)
-table(common_subj_id_subset_ISSPR_bw$stim_dur_ms, common_subj_id_subset_ISSPR_bw$common_subj_id)
-
-# combine the two sets to perform an ANOVA
-subset_ISSPexperiments_bw <- rbindlist(list(common_subj_id_subset_issp12_bw , common_subj_id_subset_ISSPR_bw), 
+# combine the two sets to perform an ANOVA, 
+# DECIDE HERE WHETHER ORIGINAL OR FILTERED IMAGES SHOULD BE COMPARED WITH SACCADE CONDITION (original vs suppressed)
+subset_ISSPexperiments_bw <- rbindlist(list(common_subj_id_subset_issp12_bw, 
+                                            ISSPR_allothers_correct[sac_suppression_f=="original"]), 
                                     fill = TRUE)
 
-# verify that all conditions are comparable (we need one value in each cell)
-table(subset_ISSPexperiments_bw$common_subj_id, subset_ISSPexperiments_bw$stim_dur_ms, 
+# verify that all conditions are comparable and we have the same number of (independent) subjects
+table(subset_ISSPexperiments_bw$subj_id, subset_ISSPexperiments_bw$stim_dur_ms, 
       subset_ISSPexperiments_bw$fixreplay, useNA = "ifany")
 
-# create discrete factor for ANOVA, otherwise it would be coded as numeric
-subset_ISSPexperiments_bw[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+# convert subj_id to factor
+subset_ISSPexperiments_bw[ , subj_id := factor(subj_id)]
+subset_ISSPexperiments_bw[ , fixreplay_f := factor(fixreplay)]
+subset_ISSPexperiments_bw[ , stim_dur_ms_f := droplevels(stim_dur_ms_f)]
+table(subset_ISSPexperiments_bw$subj_id, subset_ISSPexperiments_bw$stim_dur_ms_f)
 
 # perform ANOVA
-ezANOVA(data = subset_ISSPexperiments_bw, wid = .(common_subj_id), dv = .(correct), 
-       between = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+ezANOVA(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct), 
+        between = .(fixreplay), 
+        within = .(stim_dur_ms_f), 
+        detailed = TRUE)
 
 # plot to evaluate ANOVA results
-ezPlot(data = subset_ISSPexperiments_bw, wid = .(common_subj_id), dv = .(correct), 
-       between = .(fixreplay, stim_dur_ms_f), 
+ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct), 
+       between = .(fixreplay), within = .(stim_dur_ms_f),
        x = .(stim_dur_ms_f), split = .(fixreplay))
+ezStats(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct), 
+        between = .(fixreplay), within = .(stim_dur_ms_f))
 ```
 
-Here we start "replay-ISSP 1& 2 -within": N=3 mit Faktor stim_dur_ms (8.33-58.33, 7 levels)
+TO DO: do the above for original vs suppressed conditions
+
+Here we start "replay-ISSP 1& 2 -within": N=3 mit Faktor stim_dur_ms (8.33-58.33, 7 levels). 
+So who are the subjects that were tested in all three experiments? It's 1-3 by the definition at the top!
 ```{r}
+# saccade experiments
+common_three_sac <- issp12_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                          stim_dur_ms < 60]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+# as you can see now, people have 2 values at 33.33 - we can take the average here
+common_three_sac <- common_three_sac[ , .(correct = mean(correct)), 
+                                      by = .(fixreplay, common_subj_id, stim_dur_ms, stim_dur_ms_f)]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
 
-common_subj_id_subset_issp1 <- issp12_prop_correct[common_subj_id!="all others" & stim_dur_ms < 60 & 
-                                                      experiment_f == "1"]
-
-common_subj_id_subset_issp2 <- issp12_prop_correct[common_subj_id!="all others" &                                                          stim_dur_ms < 60 & experiment_f == "2"]
-
-table(common_subj_id_subset_issp1$experiment, common_subj_id_subset_issp1$common_subj_id)
-table(common_subj_id_subset_issp1$stim_dur_ms, common_subj_id_subset_issp1$common_subj_id)
-
-table(common_subj_id_subset_issp2$experiment, common_subj_id_subset_issp2$common_subj_id)
-table(common_subj_id_subset_issp2$stim_dur_ms, common_subj_id_subset_issp2$common_subj_id)
-
-ISSPR_prop_correct[ , stim_dur_ms := as.numeric(as.character(stim_dur))] # we need this numeric variable
-
-common_subj_id_subset_ISSPR_wid <- ISSPR_prop_correct[common_subj_id=="all others" & 
-                                                    stim_dur_ms > 8 & stim_dur_ms < 60 & 
-                                                    sac_suppression_f=="unfiltered"] # choose condition here!
-table(common_subj_id_subset_ISSPR_wid$experiment, common_subj_id_subset_ISSPR_wid$common_subj_id)
-table(common_subj_id_subset_ISSPR_wid$stim_dur_ms, common_subj_id_subset_ISSPR_wid$common_subj_id)
+# replay experiments
+common_three_replay <- ISSPR_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                            stim_dur_ms < 60 & 
+                                            sac_suppression_f=="unfiltered"] # choose condition here!
+table(common_three_replay$common_subj_id, common_three_replay$stim_dur_ms)
 
 # combine the two sets to perform an ANOVA
-subset_ISSPexperiments_wid <- rbindlist(list(common_subj_id_subset_issp1 ,common_subj_id_subset_issp2, common_subj_id_subset_ISSPR_wid), 
+common_three <- rbindlist(list(common_three_sac, common_three_replay), 
                                     fill = TRUE)
-
-subset_ISSPexperiments_wid[ , stim_dur_ms_f := ordered(stim_dur_ms)]
+table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixreplay)
 
 # here I make smth wrong like above (between design); ANOVA did not work 
-# perform ANOVA
-ezANOVA(data = subset_ISSPexperiments_wid, wid = .(common_subj_id), dv = .(correct), 
-       within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
+## perform ANOVA
+# use type 1 ANOVA, as we have too little subjects for assumption tests
+ezANOVA(data = common_three, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE, type = 1)
 
 # plot to evaluate ANOVA results
-ezPlot(data = subset_ISSPexperiments_wid, wid = .(common_subj_id), dv = .(correct), 
+ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct), 
        within = .(fixreplay, stim_dur_ms_f), 
-       x = .(stim_dur_ms_f), split = .(fixreplay))
+       x = .(stim_dur_ms_f), split = .(fixreplay), type = 1)
 
-
-
-
-
+ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct), 
+        within = .(fixreplay, stim_dur_ms_f), type = 1)
 ```
+
+TO DO: do the above for unfiltered vs filtered conditions
+
 
 Preparing for "proportion correct" by subject 
 ```{r}
