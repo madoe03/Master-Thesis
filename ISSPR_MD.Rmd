@@ -175,21 +175,6 @@ issp[experiment==2 & subj_id=="14", common_subj_id := "9"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="08", common_subj_id := "9"]
 
 
-## this will mess up all the existing merging code up to this point:
-# #here we create ID's for "all others" N=11); only for ISSPR
-# View (ISSPR_data_without_overlap_metrics)
-# ISSPR_data_without_overlap_metrics[subj_id.x=="15", common_subj_id := "15"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="16", common_subj_id := "16"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="19", common_subj_id := "19"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="11", common_subj_id := "11"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="12", common_subj_id := "12"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="17", common_subj_id := "17"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="21", common_subj_id := "21"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="22", common_subj_id := "22"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="P6", common_subj_id := "6"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="13", common_subj_id := "13"]
-# ISSPR_data_without_overlap_metrics[subj_id.x=="18", common_subj_id := "18"]
-
 # check saccade experiments
 table(issp$experiment, issp$common_subj_id)
 # check replay experiment
@@ -338,15 +323,11 @@ str(ISSPR_prop_correct$sac_suppression_f) # Richard: Why do you do this below? Y
 levels(ISSPR_prop_correct$sac_suppression_f) <- c("unfiltered", "filtered")
 ISSPR_prop_correct[, fixreplay:= ("Replay (Exp. 4)")]
 
-# Mara: Here I think is a mistake; the output make no sense for me; was not sure if it
-# okay to use experiment==4 ?
+
 # if you check this, you find that all other subjects are also still included as NA:
 table(ISSPR_prop_correct$common_subj_id, ISSPR_prop_correct$experiment, useNA="ifany")
 ISSPR_prop_correct[is.na(common_subj_id), common_subj_id := "all others"]
-# Richard: 
-# Indeed, already in your base data frame you do not have proper common_subj_id 
 table(ISSPR_data_without_overlap_metrics$common_subj_id, useNA = "ifany")
-# -- see comments in chunk 8
 
 # in this variable we code whether participants have a common_subj_id or not
 ISSPR_prop_correct[common_subj_id == "all others", common_subj_id_exists_replay := "unmatched"]
@@ -417,7 +398,7 @@ ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
 ISSPR_prop
 ```
 
-Here we combine saccade and replay condition in one Plot 
+Here we combine saccade and replay condition in one Plot for N=9
 ```{r, fig.width=15, fig.height=7}
 ggplot()+
   geom_point(data=ISSPR_prop_correct[common_subj_id != "all others"], 
@@ -518,7 +499,7 @@ ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(corre
        x = .(stim_dur_ms_f), split = .(fixreplay))
 ```
 
-Subj. not in both conditions; between design N=11
+Subj. not in both conditions; between (bw) design N=11; no-common subjects!
 ```{r}
 # not-common subjects in saccade exp
 common_subj_id_subset_issp12_bw <- issp12_prop_correct[common_subj_id== "all others" & 
@@ -529,7 +510,7 @@ table(common_subj_id_subset_issp12_bw$experiment, common_subj_id_subset_issp12_b
       common_subj_id_subset_issp12_bw$common_subj_id)
 table(common_subj_id_subset_issp12_bw$stim_dur_ms, common_subj_id_subset_issp12_bw$subj_id)
 
-# not-common subjects in replay exp
+# not-common subjects in replay; ISSPR
 ISSPR_data_without_overlap_metrics[ , subj_id := subj_id.x]
 table(ISSPR_data_without_overlap_metrics$stim_dur_ms, ISSPR_data_without_overlap_metrics$subj_id)
 ISSPR_allothers_correct <- ISSPR_data_without_overlap_metrics[is.na(common_subj_id) & # only those who do not have a common subj id
@@ -539,14 +520,16 @@ ISSPR_allothers_correct <- ISSPR_data_without_overlap_metrics[is.na(common_subj_
                                replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
                              by = .(experiment, subj_id, sac_suppression_f, stim_dur_ms, stim_dur_ms_f)] 
 ISSPR_allothers_correct$fixreplay <- "Replay (Exp. 4)"
+
 # recode the subj_id
 ISSPR_allothers_correct[ , subj_id := as.character(as.numeric(as.ordered(subj_id)))] # 1-11
 table(ISSPR_allothers_correct$stim_dur_ms, ISSPR_allothers_correct$subj_id)
+
 # within-subj variance here
 ISSPR_allothers_correct[ , gm_correct := mean(correct), by = .(experiment)]
 ISSPR_allothers_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, subj_id)]
 
-# combine the two sets to perform an ANOVA, 
+# combine the two sets to perform an ANOVA,  Original Condition for filtered images
 # DECIDE HERE WHETHER ORIGINAL OR FILTERED IMAGES SHOULD BE COMPARED WITH SACCADE CONDITION (original vs suppressed)
 subset_ISSPexperiments_bw <- rbindlist(list(common_subj_id_subset_issp12_bw, 
                                             ISSPR_allothers_correct[sac_suppression_f=="original"]), 
@@ -577,6 +560,82 @@ ezStats(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
 ```
 
 TO DO: do the above for original vs suppressed conditions
+``` {r}
+# combine the two sets to perform an ANOVA,  Original Condition for filtered images
+subset_ISSPexperiments_bw_sup <- rbindlist(list(common_subj_id_subset_issp12_bw, 
+                                            ISSPR_allothers_correct[sac_suppression_f=="suppressed"]), 
+                                    fill = TRUE)
+
+# verify that all conditions are comparable and we have the same number of (independent) subjects
+table(subset_ISSPexperiments_bw_sup$subj_id, subset_ISSPexperiments_bw$stim_dur_ms, 
+      subset_ISSPexperiments_bw_sup$fixreplay, useNA = "ifany")
+
+# convert subj_id to factor
+subset_ISSPexperiments_bw_sup[ , subj_id := factor(subj_id)]
+subset_ISSPexperiments_bw_sup[ , fixreplay_f := factor(fixreplay)]
+subset_ISSPexperiments_bw_sup[ , stim_dur_ms_f := droplevels(stim_dur_ms_f)]
+
+table(subset_ISSPexperiments_bw_sup$subj_id, subset_ISSPexperiments_bw_sup$stim_dur_ms_f)
+
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct), 
+        between = .(fixreplay), 
+        within = .(stim_dur_ms_f), 
+        detailed = TRUE)
+
+# plot to evaluate ANOVA results
+ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct), 
+       between = .(fixreplay), within = .(stim_dur_ms_f),
+       x = .(stim_dur_ms_f), split = .(fixreplay))
+ezStats(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct), 
+        between = .(fixreplay), within = .(stim_dur_ms_f))
+
+``` 
+
+Here we combine the two plots from the between ANOVA (N=11) for original vs. suppressed filtered images
+```{r, fig.width=15, fig.height=7}
+#Mara COMMENT: Did I have to change it as.numeric here ?; wanna ask before I did a mess again 
+subset_ISSPexperiments_bw[ , stim_dur_ms_f := droplevels(stim_dur_ms_f)]
+subset_ISSPexperiments_bw_sup[ , stim_dur_ms_f := droplevels(stim_dur_ms_f)]
+
+ggplot()+
+  geom_point(data=subset_ISSPexperiments_bw[is.na(common_subj_id)], 
+             aes(x = stim_dur_ms_f, y = correct, color = sac_suppression_f, 
+                 shape = fixreplay, 
+                 group = paste(experiment, sac_suppression_f)))+
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+  geom_line(data=subset_ISSPexperiments_bw[is.na(common_subj_id)], 
+             aes(x = stim_dur_ms_f, y = correct, color = sac_suppression_f, 
+                 linetype = fixreplay, 
+                 group = paste(experiment, sac_suppression_f)), 
+            size = 1.5, alpha = 0.8) + 
+  labs(x = "Presentation duration [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+  geom_point(data= subset_ISSPexperiments_bw_sup[is.na(common_subj_id)], 
+             aes(x =stim_dur_ms_f, y = correct, color = sac_suppression_f, 
+                 shape = fixreplay, 
+                 group = paste(experiment_f, color_yes_f)))+ 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+  geom_line(data= subset_ISSPexperiments_bw_sup[is.na(common_subj_id)], 
+             aes(x = stim_dur_ms_f, y = correct, color = sac_suppression_f, 
+                 linetype = fixreplay,
+                 group = paste(experiment_f, color_yes_f)), 
+            size = 1.5, alpha = 0.8) + 
+  theme_classic(base_size = 12.5) + ocimTheme() + 
+  coord_cartesian(ylim = c(0.45, 1)) + 
+  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_shape_manual(values = c(15, 17)) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  scale_x_continuous(breaks = c(30, 40, 50, 60)) + 
+  labs(x = "Presentation duration [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task", 
+       linetype = "Task") + 
+  facet_wrap(~is.na(common_subj_id))
+
+```
+
 
 Here we start "replay-ISSP 1& 2 -within": N=3 mit Faktor stim_dur_ms (8.33-58.33, 7 levels). 
 So who are the subjects that were tested in all three experiments? It's 1-3 by the definition at the top!
