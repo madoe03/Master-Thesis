@@ -61,6 +61,7 @@ library(robustbase)
 library(quickpsy)
 library(scales)
 library (tidyr)
+library(gridExtra)
 ```
 
 Some important basics before running main parts
@@ -437,6 +438,48 @@ ggplot()+
   facet_wrap(~common_subj_id)
 
 ```
+Here I want to combine the plots of the population aggregate for participants that are matched across experiments (common_subj_ids 1-9) and those that are not
+```{r, fig.width=15, fig.height=7}
+ggplot()+ 
+  geom_point(data=issp12_prop_correct_agg, 
+                aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                    shape = fixreplay, 
+                   group = paste(experiment_f, color_yes_f)))+
+     geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+     geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+     geom_line(data=issp12_prop_correct_agg, 
+               aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                   linetype = fixreplay, 
+                   group = paste(experiment_f, color_yes_f)), 
+              size = 1.5, alpha = 0.8) + 
+     labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+          color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+         geom_point(data = ISSPR_prop_correct_agg, 
+                aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                    shape = fixreplay, 
+                    group = paste(experiment, sac_suppression_f)))+ 
+     geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+     geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
+     geom_errorbar(aes(ymax = correct + correct_se, ymin = correct - correct_se), 
+                   width = 0, size = 1, alpha = 0.5) + 
+     geom_errorbarh(aes(xmax = replay_sac_display_off_latency + replay_sac_display_off_latency_sd, 
+                        xmin = replay_sac_display_off_latency - replay_sac_display_off_latency_sd), 
+                    height = 0, size = 1, alpha = 0.5) + 
+      geom_line(size = 1.5, alpha = 0.8) + 
+     geom_point(size = 2.5) + 
+     theme_classic(base_size = 12.5) + ocimTheme() + 
+     coord_cartesian(ylim = c(0.45, 1)) + 
+     scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE))+
+     scale_shape_manual(values = c(15, 17)) + 
+     scale_y_continuous(expand = c(0,0)) + 
+     scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
+     labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+         color = "Simulated suppression", fill = "Simulated suppression", shape = "Task", 
+         linetype = "Task") + 
+     facet_wrap(~common_subj_id_exists_replay)
+```
+
+
 
 Here we start with statistic differences between saccade/replay condition
 First: within subject (VP (N=9) data from Exp 2 + Replay) for the UNFILTERED condition.
