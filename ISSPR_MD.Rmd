@@ -718,11 +718,10 @@ ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
 ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), type = 1)
 ```
-
 TO DO: do the above for unfiltered vs filtered conditions
 
 
-Preparing for "proportion correct" by subject 
+Here I preparing for "proportion correct" by subject (N=20)
 ```{r}
 ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)), 
   by = .(subj_id.x)]
@@ -731,8 +730,8 @@ prop_correct_subj_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct
 
 ```
 
-Plot for proportion correct by image type and subject 
-```{r}
+Plot for proportion correct by image condition and subject (N=20)
+```{r, fig.width=15, fig.height=7}
 p_prop_correct_subj_replay <- ggplot(data = prop_correct_subj_replay, 
                               aes(x = stim_dur, y = prop_correct, 
                                   color = sac_suppression_f, group = sac_suppression_f)) + 
@@ -757,9 +756,11 @@ anov_prop_replay <- ezANOVA(data = prop_correct_subj_replay, dv =.(prop_correct)
 
 anov_prop_replay
 ```
-Moreys Correction for proportion correct
+
+Here I start creating the plot for proportion correct and stim_dur [ms]. (N=20)
 ```{r}
-# Removing in-between Variance
+#Moreys Correction for proportion correct
+#Removing in-between Variance
 prop_correct_subj_replay[, ID_mean := mean(prop_correct), by =.(subj_id.x)] 
 prop_correct_subj_replay[, overall_mean := mean(prop_correct),] 
 prop_correct_subj_replay[, p_mean := (prop_correct - ID_mean + overall_mean),] 
@@ -781,8 +782,8 @@ n_conditions <- length(unique(p_correct_replay$sac_suppression_f))*length(unique
 p_correct_replay[, MC_se := C_SE*(n_conditions/(n_conditions-1))]
 ```
 
-Second plot proportion correct
-```{r,warning=FALSE}
+Second plot proportion correct and stim_dur [ms] (N=20)
+```{r, fig.width=15, fig.height=7,warning=FALSE}
 # erst character und dann numerischen Teil 
 # hier wieder die presentation duration runden auf 2 Nachkommast.
 prop_replay_plot <- ggplot(data = p_correct_replay, aes(x = stim_dur, y = P_mean, 
@@ -796,7 +797,7 @@ prop_replay_plot <- ggplot(data = p_correct_replay, aes(x = stim_dur, y = P_mean
   scale_fill_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) + 
   scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) + 
   theme_classic(base_size = 15) + ocimTheme() +
-  labs(x =  "Presentation duration [ms]",y = "Proportion correct", 
+  labs(x =  "Display offset re saccade offset [ms]",y = "Proportion scene correctly matched", 
        fill = "Image type", color = "Image type") + 
   theme(legend.position = "right")
 
@@ -805,9 +806,80 @@ prop_replay_plot
 
 ```
 
+Here I start creating the plot for proportion correct and replay_sac_display_off_lat. (N=20)
+```{r}
+
+prop_correct_subj_replay_latency <- ISSPR_data_without_overlap_metrics[ , 
+                                                               .(prop_correct = mean(correct),
+                                                                 replay_sac_display_off_latency = mean(replay_sac_display_off_latency)), 
+                                                               by = .(subj_id.x, sac_suppression_f, stim_dur)
+                                                              ][order(subj_id.x, sac_suppression_f, stim_dur)]
+
+
+#Moreys Correction for proportion correct
+# Removing in-between Variance
+prop_correct_subj_replay_latency[, ID_mean := mean(prop_correct), by =.(subj_id.x)] 
+prop_correct_subj_replay_latency[, overall_mean := mean(prop_correct),] 
+prop_correct_subj_replay_latency[, p_mean := (prop_correct - ID_mean + overall_mean),] 
+
+p_correct_replay_latency <- prop_correct_subj_replay_latency[,
+                               .(P_mean = mean(prop_correct), 
+                                 CP_mean = mean(p_mean),  
+                                 C_SD = sd(p_mean),  
+                                 C_SE = (sd(p_mean)/sqrt(length(p_mean))), 
+                                 N = length(p_mean),
+                                 replay_sac_display_off_latency = mean(replay_sac_display_off_latency)),
+                               keyby = .(sac_suppression_f, stim_dur)]
+
+
+## Standardfehler und Abweichung
+prop_correct_subj_replay_latency[, prop_SE := (sd(prop_correct)/sqrt(length(prop_correct))), by =.(subj_id.x, sac_suppression_f)]
+prop_correct_subj_replay_latency[, prop_SD := sd(prop_correct), by =.(subj_id.x, sac_suppression_f)]
+
+n_conditions <- length(unique(p_correct_replay_latency$sac_suppression_f))*length(unique(p_correct_replay_latency$stim_dur))
+p_correct_replay_latency[, MC_se := C_SE*(n_conditions/(n_conditions-1))]
+
+
+```
+
+Here is the first plot for proportion correct and replay_display_off_latency
+```{r}
+prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency, 
+                           aes(x = replay_sac_display_off_latency, y = P_mean, 
+                               color = sac_suppression_f, group = sac_suppression_f)) + 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +  # vertikale Linie bei 0
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) +  # horizontale Linie bei 0.5
+  geom_errorbar(aes(ymax = P_mean + MC_se, ymin = P_mean - MC_se), 
+                width = 0, size = 1, alpha = 0.5) +  # Fehlerbalken für y
+  geom_errorbarh(aes(xmax = replay_sac_display_off_latency + MC_se, 
+                     xmin = replay_sac_display_off_latency - MC_se), 
+                 height = 0, size = 1, alpha = 0.5) +  # Fehlerbalken für x
+  geom_line(size = 1.5, alpha = 0.8) +  # Linie für Mittelwerte
+  geom_point(size = 2.5) +  # Punkte für Mittelwerte
+  theme_classic(base_size = 12.5) + ocimTheme() +  # klassisches Theme
+  coord_cartesian(ylim = c(0.45, 1)) +  # Y-Achsen-Bereich anpassen
+  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +  # Farbskala
+  scale_y_continuous(expand = c(0,0)) +  # Y-Achse ohne zusätzliche Abstände
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = c(-40, 20)) +  # X-Achse mit entsprechenden Breaks und Limits
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression") +  # Achsenbezeichner
+  theme(legend.position = "right")
+
+prop_replay_latency_plot
+```
+
+Here I wanna do a ezANOVA for prop_correct_subj_replay_latency
+```{r}
+
+prop_correct_subj_replay_latency$stim_dur <- factor(prop_correct_subj_replay_latency$stim_dur)
+prop_correct_subj_replay_latency$subj_id.x <- factor(prop_correct_subj_replay_latency$subj_id.x)
+anov_prop_replay_latency <- ezANOVA(data = prop_correct_subj_replay_latency, dv = .(prop_correct), 
+                                    wid = .(subj_id.x), within = .(sac_suppression_f, stim_dur), 
+                                    detailed = TRUE)
+```
 Here we will create BINS for the latency 
 ```{r}
-ISSPR_data_without_overlap_metrics[, sac_display_off_latency_bins := cut_number(replay_sac_display_off_latency, n=6)]
+ISSPR_data_without_overlap_metrics[, sac_display_off_latency_bins := cut_number(replay_sac_display_off_latency, n=4)]
 
 
 prop_correct_subj_bins_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)), 
