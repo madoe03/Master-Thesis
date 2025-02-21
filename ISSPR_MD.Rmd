@@ -269,7 +269,7 @@ p_issp12_prop_subj <- ggplot(data = issp12_prop_correct[common_subj_id != "all o
   geom_point(size = 2.5) + 
   theme_classic(base_size = 12.5) + ocimTheme() + 
   coord_cartesian(ylim = c(0.45, 1)) + 
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_color_manual(values = experiment_colorscale) +
   scale_shape_manual(values = c(15, 17)) + 
   scale_y_continuous(expand = c(0,0)) + 
   scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
@@ -279,7 +279,7 @@ p_issp12_prop_subj <- ggplot(data = issp12_prop_correct[common_subj_id != "all o
 p_issp12_prop_subj
 ```
 
-this plot contains the population aggregate for participants that are matched across experiments  
+This plot contains the population aggregate for participants that are matched across experiments  
 (common_subj_ids 1..9) and those that are not (encoded in the variable common_subj_id_exists)
 ``` {r}
 p_issp12_prop <- ggplot(data = issp12_prop_correct_agg, 
@@ -297,7 +297,7 @@ p_issp12_prop <- ggplot(data = issp12_prop_correct_agg,
   geom_point(size = 2.5) + 
   theme_classic(base_size = 12.5) + ocimTheme() + 
   coord_cartesian(ylim = c(0.45, 1)) + 
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_color_manual(values = experiment_colorscale) +
   scale_shape_manual(values = c(15, 17)) + 
   scale_y_continuous(expand = c(0,0)) + 
   scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
@@ -348,6 +348,7 @@ ISSPR_prop_correct_agg <- ISSPR_prop_correct[ ,
 ISSPR_prop_correct_agg
 ```
 Here we create the Plot for Prop. Correct; ISSP Replay and common_subj_id
+Mara Comment: Here is the same problem; the legend changed when Iam using (scale_color_manual(values = experiment_colorscale)), what is the mistake here?
 ```{r, fig.width=15, fig.height=7} 
 ISSPR_prop_subj <- ggplot(data = ISSPR_prop_correct[common_subj_id != "all others"], 
                          aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
@@ -388,7 +389,7 @@ ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
   geom_point(size = 2.5) + 
   theme_classic(base_size = 12.5) + ocimTheme() + 
   coord_cartesian(ylim = c(0.45, 1)) + 
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE)) +
   scale_shape_manual(values = c(15, 17)) + 
   scale_y_continuous(expand = c(0,0)) + 
   scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
@@ -428,7 +429,7 @@ ggplot()+
             size = 1.5, alpha = 0.8) + 
   theme_classic(base_size = 12.5) + ocimTheme() + 
   coord_cartesian(ylim = c(0.45, 1)) + 
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
+  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE)) +
   scale_shape_manual(values = c(15, 17)) + 
   scale_y_continuous(expand = c(0,0)) + 
   scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20)) + 
@@ -436,50 +437,55 @@ ggplot()+
        color = "Simulated suppression", fill = "Simulated suppression", shape = "Task", 
        linetype = "Task") + 
   facet_wrap(~common_subj_id)
-
 ```
+
 Here I want to combine the plots of the population aggregate for participants that are matched across experiments (common_subj_ids 1-9) and those that are not
 ```{r, fig.width=15, fig.height=7}
+issp12_prop_correct_agg[ , common_subj_id_exists_replay := common_subj_id_exists]
+
 ggplot()+ 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
   geom_point(data=issp12_prop_correct_agg, 
-                aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
-                    shape = fixreplay, 
-                   group = paste(experiment_f, color_yes_f)))+
-     geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
-     geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
-     geom_line(data=issp12_prop_correct_agg, 
-               aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
-                   linetype = fixreplay, 
-                   group = paste(experiment_f, color_yes_f)), 
-              size = 1.5, alpha = 0.8) + 
-     labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
-          color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
-         geom_point(data = ISSPR_prop_correct_agg, 
-                aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
-                    shape = fixreplay, 
-                    group = paste(experiment, sac_suppression_f)))+ 
-     geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
-     geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
-     geom_errorbar(aes(ymax = correct + correct_se, ymin = correct - correct_se), 
-                   width = 0, size = 1, alpha = 0.5) + 
-     geom_errorbarh(aes(xmax = replay_sac_display_off_latency + replay_sac_display_off_latency_sd, 
-                        xmin = replay_sac_display_off_latency - replay_sac_display_off_latency_sd), 
-                    height = 0, size = 1, alpha = 0.5) + 
-      geom_line(size = 1.5, alpha = 0.8) + 
-     geom_point(size = 2.5) + 
-     theme_classic(base_size = 12.5) + ocimTheme() + 
-     coord_cartesian(ylim = c(0.45, 1)) + 
-     scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE))+
-     scale_shape_manual(values = c(15, 17)) + 
-     scale_y_continuous(expand = c(0,0)) + 
-     scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
-     labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
-         color = "Simulated suppression", fill = "Simulated suppression", shape = "Task", 
-         linetype = "Task") + 
-     facet_wrap(~common_subj_id_exists_replay)
+             aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                 shape = fixreplay, 
+                 group = paste(experiment_f, color_yes_f)), size = 2)+
+  geom_line(data=issp12_prop_correct_agg, 
+            aes(x = sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                linetype = fixreplay, 
+                group = paste(experiment_f, color_yes_f)), 
+            size = 1.5, alpha = 0.8) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
+  geom_point(data = ISSPR_prop_correct_agg, 
+             aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                 shape = fixreplay, 
+                 group = paste(experiment, sac_suppression_f)), size = 2) + 
+  geom_line(data = ISSPR_prop_correct_agg, 
+             aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f, 
+                 group = paste(experiment, sac_suppression_f)), 
+            size = 1.5, alpha = 0.8) + 
+  geom_errorbar(data = ISSPR_prop_correct_agg, 
+                aes(x = replay_sac_display_off_latency, color = sac_suppression_f, 
+                    ymax = correct + correct_se, ymin = correct - correct_se),
+                width = 0, size = 1, alpha = 1) +
+  geom_errorbarh(data = ISSPR_prop_correct_agg, 
+                 aes(y = correct, color = sac_suppression_f, 
+                     xmax = replay_sac_display_off_latency + replay_sac_display_off_latency_sd,
+                     xmin = replay_sac_display_off_latency - replay_sac_display_off_latency_sd),
+                 height = 0, size = 1, alpha = 1) +
+  theme_classic(base_size = 12.5) + ocimTheme() + 
+  coord_cartesian(ylim = c(0.45, 1)) + 
+  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))+
+  scale_shape_manual(values = c(15, 17)) + 
+  scale_linetype_manual(values = c("dashed", "solid")) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
+       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task", 
+       linetype = "Task") + 
+  facet_wrap(~common_subj_id_exists_replay)
 ```
-
-
 
 Here we start with statistic differences between saccade/replay condition
 First: within subject (VP (N=9) data from Exp 2 + Replay) for the UNFILTERED condition.
@@ -512,10 +518,18 @@ table(subset_ISSPexperiments$common_subj_id, subset_ISSPexperiments$stim_dur_ms,
 # perform ANOVA
 ezANOVA(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+ezStats(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
+        within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay))
 # plot to evaluate ANOVA results
 ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), 
-       x = .(stim_dur_ms_f), split = .(fixreplay))
+       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
+      labs(y = "Proportion scene correctly matched")+
+      labs(x = "Display Duration [ms]", 
+       color = "Task", 
+       linetype = "Task", 
+       shape = "Task") 
+      
 
 ```
 
@@ -539,7 +553,12 @@ ezANOVA(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(corr
 
 ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), 
-       x = .(stim_dur_ms_f), split = .(fixreplay))
+       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
+      labs(y = "Proportion scene correctly matched")+
+      labs(x = "Display Duration [ms]", 
+       color = "Task", 
+       linetype = "Task", 
+       shape = "Task") 
 ```
 
 Subj. not in both conditions; between (bw) design N=11; no-common subjects!
@@ -597,7 +616,14 @@ ezANOVA(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
 # plot to evaluate ANOVA results
 ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct), 
        between = .(fixreplay), within = .(stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay))
+       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
+      labs(y = "Proportion scene correctly matched")+
+      labs(x = "Display Duration [ms]", 
+       color = "Task", 
+       linetype = "Task", 
+       shape = "Task") 
+
+
 ezStats(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct), 
         between = .(fixreplay), within = .(stim_dur_ms_f))
 ```
@@ -629,55 +655,18 @@ ezANOVA(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
 # plot to evaluate ANOVA results
 ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct), 
        between = .(fixreplay), within = .(stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay))
+       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
+      labs(y = "Proportion scene correctly matched")+
+       labs(x = "Display Duration [ms]", 
+       color = "Task", 
+       linetype = "Task", 
+       shape = "Task") 
+
+
 ezStats(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct), 
         between = .(fixreplay), within = .(stim_dur_ms_f))
 
 ``` 
-
-Here we combine the two plots from the between ANOVA (N=11) for original vs. suppressed filtered images
-```{r, fig.width=15, fig.height=7}
-#Mara COMMENT: Did I have to change it as.numeric here ?; wanna ask before I did a mess again 
-subset_ISSPexperiments_bw[ , stim_dur_ms_f := droplevels(stim_dur_ms_f)]
-subset_ISSPexperiments_bw_sup[ , stim_dur_ms_f := droplevels(stim_dur_ms_f)]
-
-ggplot()+
-  geom_point(data=subset_ISSPexperiments_bw[is.na(common_subj_id)], 
-             aes(x = stim_dur_ms_f, y = correct, color = sac_suppression_f, 
-                 shape = fixreplay, 
-                 group = paste(experiment, sac_suppression_f)))+
-  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
-  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
-  geom_line(data=subset_ISSPexperiments_bw[is.na(common_subj_id)], 
-             aes(x = stim_dur_ms_f, y = correct, color = sac_suppression_f, 
-                 linetype = fixreplay, 
-                 group = paste(experiment, sac_suppression_f)), 
-            size = 1.5, alpha = 0.8) + 
-  labs(x = "Presentation duration [ms]", y = "Proportion scene correctly matched", 
-       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task") + 
-  geom_point(data= subset_ISSPexperiments_bw_sup[is.na(common_subj_id)], 
-             aes(x =stim_dur_ms_f, y = correct, color = sac_suppression_f, 
-                 shape = fixreplay, 
-                 group = paste(experiment_f, color_yes_f)))+ 
-  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
-  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
-  geom_line(data= subset_ISSPexperiments_bw_sup[is.na(common_subj_id)], 
-             aes(x = stim_dur_ms_f, y = correct, color = sac_suppression_f, 
-                 linetype = fixreplay,
-                 group = paste(experiment_f, color_yes_f)), 
-            size = 1.5, alpha = 0.8) + 
-  theme_classic(base_size = 12.5) + ocimTheme() + 
-  coord_cartesian(ylim = c(0.45, 1)) + 
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
-  scale_shape_manual(values = c(15, 17)) + 
-  scale_y_continuous(expand = c(0,0)) + 
-  scale_x_continuous(breaks = c(30, 40, 50, 60)) + 
-  labs(x = "Presentation duration [ms]", y = "Proportion scene correctly matched", 
-       color = "Simulated suppression", fill = "Simulated suppression", shape = "Task", 
-       linetype = "Task") + 
-  facet_wrap(~is.na(common_subj_id))
-
-```
 
 
 Here we start "replay-ISSP 1& 2 -within": N=3 mit Faktor stim_dur_ms (8.33-58.33, 7 levels). 
@@ -713,7 +702,11 @@ ezANOVA(data = common_three, wid = .(common_subj_id), dv = .(correct),
 # plot to evaluate ANOVA results
 ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct), 
        within = .(fixreplay, stim_dur_ms_f), 
-       x = .(stim_dur_ms_f), split = .(fixreplay), type = 1)
+       x = .(stim_dur_ms_f), split = .(fixreplay), type = 1)+scale_color_manual(values = experiment_colorscale)+ labs(y = "Proportion scene correctly matched")+
+    labs(x = "Display Duration [ms]", 
+       color = "Task", 
+       linetype = "Task", 
+       shape = "Task") 
 
 ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct), 
         within = .(fixreplay, stim_dur_ms_f), type = 1)
@@ -737,8 +730,8 @@ p_prop_correct_subj_replay <- ggplot(data = prop_correct_subj_replay,
                                   color = sac_suppression_f, group = sac_suppression_f)) + 
   geom_point() + geom_line() + geom_hline(yintercept = 0.5,linetype='dashed')+
   theme_classic() + 
-  labs(x = "Presentation duration [ms]", y = "Proportion correct", 
-       color = "Image type") + 
+  labs(x = "Presentation duration [ms]", y = "Proportion scence correctly matched", 
+       color = "Simulated suppression") + 
   facet_wrap(~subj_id.x)
 
 p_prop_correct_subj_replay
@@ -782,29 +775,7 @@ n_conditions <- length(unique(p_correct_replay$sac_suppression_f))*length(unique
 p_correct_replay[, MC_se := C_SE*(n_conditions/(n_conditions-1))]
 ```
 
-Second plot proportion correct and stim_dur [ms] (N=20)
-```{r, fig.width=15, fig.height=7,warning=FALSE}
-# erst character und dann numerischen Teil 
-# hier wieder die presentation duration runden auf 2 Nachkommast.
-prop_replay_plot <- ggplot(data = p_correct_replay, aes(x = stim_dur, y = P_mean, 
-                                               color = sac_suppression_f, group = sac_suppression_f)) + 
-  geom_hline(yintercept = 0.5,linetype='dashed')+
-  geom_line(size = 1.5, alpha = 0.8) +
-  geom_point(alpha = 0.8, size = 3) + 
-  geom_ribbon(aes(ymin = P_mean - MC_se,
-                  ymax = P_mean + MC_se), color = NA, alpha = 0.3) +
-  scale_y_continuous(expand=c(0,0),limits=c(0.45,1))+
-  scale_fill_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) + 
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) + 
-  theme_classic(base_size = 15) + ocimTheme() +
-  labs(x =  "Display offset re saccade offset [ms]",y = "Proportion scene correctly matched", 
-       fill = "Image type", color = "Image type") + 
-  theme(legend.position = "right")
 
-prop_replay_plot
-
-
-```
 
 Here I start creating the plot for proportion correct and replay_sac_display_off_lat. (N=20)
 ```{r}
@@ -843,6 +814,7 @@ p_correct_replay_latency[, MC_se := C_SE*(n_conditions/(n_conditions-1))]
 ```
 
 Here is the first plot for proportion correct and replay_display_off_latency
+Mara comment: Here i tried to change the color as well (scale_color_manual(values = experiment_colorscale), unluckly the legend changed in a wrong way; How can I solve it?
 ```{r}
 prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency, 
                            aes(x = replay_sac_display_off_latency, y = P_mean, 
@@ -860,7 +832,7 @@ prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency,
   coord_cartesian(ylim = c(0.45, 1)) +  # Y-Achsen-Bereich anpassen
   scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +  # Farbskala
   scale_y_continuous(expand = c(0,0)) +  # Y-Achse ohne zusätzliche Abstände
-  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = c(-40, 20)) +  # X-Achse mit entsprechenden Breaks und Limits
+  scale_x_continuous(breaks = c(-50, -40, -30, -20, -10, 0, 10, 20, 30), limits = c(-50, 30)) +  # X-Achse mit entsprechenden Breaks und Limits
   labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
        color = "Simulated suppression", fill = "Simulated suppression") +  # Achsenbezeichner
   theme(legend.position = "right")
@@ -876,7 +848,43 @@ prop_correct_subj_replay_latency$subj_id.x <- factor(prop_correct_subj_replay_la
 anov_prop_replay_latency <- ezANOVA(data = prop_correct_subj_replay_latency, dv = .(prop_correct), 
                                     wid = .(subj_id.x), within = .(sac_suppression_f, stim_dur), 
                                     detailed = TRUE)
+anov_prop_replay_latency 
 ```
+Here I wanna do the histogramms for number of trials and display duration
+```{r}
+histo_Exp12 <- ggplot(issp12_prop_correct, aes(x = sac_display_off_latency, 
+                                     color = stim_dur_ms_f, group = stim_dur_ms_f)) +
+  geom_density(aes(fill = stim_dur_ms_f, alpha = stim_dur_ms_f), size = 1, adjust = 1.5) +  # Dichtekurven mit Transparenz
+  facet_wrap(~experiment_f, scales = "free_y", ncol = 1) +  # Facetten für Experimente
+  scale_color_viridis_d(name = "Display duration [ms]", guide = "none") +  # Farben aus viridis-Skala, ohne doppelte Legende
+  scale_fill_viridis_d(name = "Display duration [ms]") +
+  scale_alpha_manual(values = seq(0.3, 1, length.out = length(unique(issp12_prop_correct$stim_dur_ms_f))), guide = "none") +
+  geom_vline(xintercept = 0, linetype = "dotted", color = "black") +  # Vertikale Linie bei x=0
+  scale_x_continuous(name = "Display offset re saccade offset [ms]", limits = c(-60, 60), breaks = c(-60, -30, 0, 30, 60)) +  # Anpassung der x-Achse
+  labs(y = "Number of trials") +
+  theme_minimal() +
+  theme(strip.text = element_text(face = "bold"),
+        legend.position = "right")
+
+histo_Exp12
+```
+Here I wann do the frequency plot for the mean distribution of all samples and observers for replay
+no vari. times for all observers, no individual saccade statstics 
+```{r}
+plot_freq <- ggplot(data = ISSPR_prop_correct_agg, 
+                          aes(x=replay_sac_display_off_latency, fill=stim_dur_ms_f, color=stim_dur_ms_f)) + 
+  #geom_histogram(binwidth = 3)  +
+  geom_freqpoly(binwidth =1 )  +
+  #geom_density(alpha= 0.1, adjust = 1/2) + 
+  geom_vline(aes(xintercept=0),color="grey", linetype="dashed", size=1) +  
+  ocimTheme()+ scale_fill_viridis_d(option = "D", begin = 0, end = 1)+  theme(legend.position = "bottom")+
+  labs(x="Display onset- saccade onset [ms]", y="Frequency", 
+       fill = "Display duration [ms]", color = "Display duration [ms]")
+
+plot_freq
+
+```
+
 Here we will create BINS for the latency 
 ```{r}
 ISSPR_data_without_overlap_metrics[, sac_display_off_latency_bins := cut_number(replay_sac_display_off_latency, n=4)]
@@ -896,7 +904,7 @@ p_prop_correct_subj_bins_replay <- ggplot(data = prop_correct_subj_bins_replay,
   geom_point() + geom_line() + 
   theme_classic() + 
   labs(x = "Display offset re simulated saccade offset", y = "Proportion correct", 
-       color = "Image type") + 
+       color = "Simulated suppression") + 
   facet_wrap(~subj_id.x)
 
 p_prop_correct_subj_bins_replay
@@ -1004,24 +1012,6 @@ n_conditions_supp <- length(unique(p_correct_suppression$sac_suppression_f))*len
 p_correct_suppression[, MC_se := C_SE*(n_conditions_supp/(n_conditions_supp-1))]
 ```
 
-Plot for the results of suppression and task condition
-```{r}
-p_ISSPR_suppression <- ggplot(data = p_correct_suppression, 
-                         aes(x = replay_sac_display_off_latency, y = P_mean, color = sac_suppression_f, group= sac_suppression_f)) + 
-  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
-  geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) + 
-  geom_line(size = 1.5, alpha = 0.8) + 
-  geom_point(size = 2.5) + 
-  theme_classic(base_size = 12.5) + ocimTheme() + 
-  coord_cartesian(ylim = c(0.45, 1)) + 
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) + 
-  scale_y_continuous(expand = c(0,0)) + 
-  scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10)) + 
-  labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched", 
-       color = "Image type", fill = "Image type")
-
-p_ISSPR_suppression
-```
 
 Here we will have two dimensions (saccade duration and saccade amplitude) for each subject
 by mean 
