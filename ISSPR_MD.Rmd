@@ -850,39 +850,183 @@ anov_prop_replay_latency <- ezANOVA(data = prop_correct_subj_replay_latency, dv 
                                     detailed = TRUE)
 anov_prop_replay_latency 
 ```
-Here I wanna do the histogramms for number of trials and display duration
+Control analyses of saccade metrics (saccade duration, peak velocity, amplitude)
 ```{r}
-histo_Exp12 <- ggplot(issp12_prop_correct, aes(x = sac_display_off_latency, 
-                                     color = stim_dur_ms_f, group = stim_dur_ms_f)) +
-  geom_density(aes(fill = stim_dur_ms_f, alpha = stim_dur_ms_f), size = 1, adjust = 1.5) +  # Dichtekurven mit Transparenz
-  facet_wrap(~experiment_f, scales = "free_y", ncol = 1) +  # Facetten für Experimente
-  scale_color_viridis_d(name = "Display duration [ms]", guide = "none") +  # Farben aus viridis-Skala, ohne doppelte Legende
-  scale_fill_viridis_d(name = "Display duration [ms]") +
-  scale_alpha_manual(values = seq(0.3, 1, length.out = length(unique(issp12_prop_correct$stim_dur_ms_f))), guide = "none") +
-  geom_vline(xintercept = 0, linetype = "dotted", color = "black") +  # Vertikale Linie bei x=0
-  scale_x_continuous(name = "Display offset re saccade offset [ms]", limits = c(-60, 60), breaks = c(-60, -30, 0, 30, 60)) +  # Anpassung der x-Achse
-  labs(y = "Number of trials") +
-  theme_minimal() +
-  theme(strip.text = element_text(face = "bold"),
-        legend.position = "right")
+ISSP_mean_sac_subj <- issp[experiment_f %in% c(1, 2), .(sac_dur = mean(sac_dur), 
+                                                         sac_amp = mean(sac_amp), 
+                                                         sac_vpeak = mean(vpeak), 
+                                                         sac_display_off_latency = mean(sac_display_off_latency), 
+                                                         sac_display_latency = mean(sac_display_latency) ), 
+                            by = .(experiment_f, subj_id, stim_dur_ms_f)]
 
-histo_Exp12
+
+# correction for between-subject variance
+ISSP_mean_sac_subj[ , gm_sac_dur := mean(sac_dur), by = .(experiment_f)]
+ISSP_mean_sac_subj[ , gm_sac_amp := mean(sac_amp), by = .(experiment_f)]
+ISSP_mean_sac_subj[ , gm_sac_vpeak := mean(sac_vpeak), by = .(experiment_f)]
+ISSP_mean_sac_subj[ , sac_dur.w := sac_dur - mean(sac_dur) + gm_sac_dur, by = .(subj_id, experiment_f)]
+ISSP_mean_sac_subj[ , sac_amp.w := sac_amp - mean(sac_amp) + gm_sac_amp, by = .(subj_id, experiment_f)]
+ISSP_mean_sac_subj[ , sac_vpeak.w := sac_vpeak - mean(sac_vpeak) + gm_sac_vpeak, by = .(subj_id, experiment_f)]
+
+
+# aggregate to subject level
+ISSP_mean_sac <- ISSP_mean_sac_subj[ , .(sac_dur = mean(sac_dur),
+                                         sac_dur_sd = sd(sac_dur.w) / sqrt(length(sac_dur)), 
+                                         sac_amp = mean(sac_amp), 
+                                         sac_amp_sd = sd(sac_amp.w) / sqrt(length(sac_amp)),   
+                                         sac_vpeak = mean(sac_vpeak), 
+                                         sac_vpeak_sd = sd(sac_vpeak.w) / sqrt(length(sac_vpeak)), 
+                                         sac_display_off_latency = mean(sac_display_off_latency), 
+                                         sac_display_off_latency_sd = sd(sac_display_off_latency) / sqrt(length(sac_display_off_latency))), 
+                                       by = .(experiment_f, stim_dur_ms_f)]
+
 ```
-Here I wann do the frequency plot for the mean distribution of all samples and observers for replay
-no vari. times for all observers, no individual saccade statstics 
+Here is the Plot for Saccade duration and Exp 1&2 
+```{r}
+dur_xlim_sacmetrics <- c(-60, 30)
+p_sac_dur <- ggplot(data = ISSP_mean_sac, 
+                    aes(x = sac_display_off_latency, y = sac_dur, color = experiment_f)) + 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_line(data = ISSP_mean_sac_subj, 
+            aes(x = sac_display_off_latency, y = sac_dur.w, color = experiment_f, group = paste(experiment_f, subj_id)), 
+            size = 0.5, alpha = 0.2) + 
+  geom_errorbar(aes(ymax = sac_dur + 2*sac_dur_sd, ymin = sac_dur - 2*sac_dur_sd), 
+                width = 0, size = 1, alpha = 0.5) + 
+  geom_errorbarh(aes(xmax = sac_display_off_latency + 2*sac_display_off_latency_sd, 
+                     xmin = sac_display_off_latency - 2*sac_display_off_latency_sd), 
+                 height = 0, size = 1, alpha = 0.5) + 
+  geom_point(size = 1.5) + 
+  geom_line(size = 1.5) + 
+  coord_cartesian(expand = FALSE, xlim = dur_xlim_sacmetrics) + 
+  scale_color_manual(values = experiment_colorscale) + 
+  scale_fill_manual(values = experiment_colorscale) + 
+  scale_alpha_manual(values = seq(0.2, 1, length.out = 8)) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Saccade\nduration [ms]",
+       color = "Experiment", fill = "Experiment") + 
+  theme_minimal(base_size = 15) + ocimTheme()
+
+p_sac_dur
+
+ezStats(data = ISSP_mean_sac_subj[experiment_f=="1"], 
+        dv = .(sac_dur), wid = .(subj_id), 
+        within = .(stim_dur_ms_f) )
+
+ezStats(data = ISSP_mean_sac_subj[experiment_f=="2"], 
+        dv = .(sac_dur), wid = .(subj_id), 
+        within = .(stim_dur_ms_f) )
+```
+
+Here is the plot for Saccade Velocity and Exp 1&2 
+```{r}
+peak_xlim_sacmetrics <- c(-60, 30)
+p_sac_vpeak <- ggplot(data = ISSP_mean_sac, 
+                    aes(x = sac_display_off_latency, y = sac_vpeak, color = experiment_f)) + 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_line(data = ISSP_mean_sac_subj, 
+            aes(x = sac_display_off_latency, y = sac_vpeak.w, color = experiment_f, group = paste(experiment_f, subj_id)), 
+            size = 0.5, alpha = 0.2) + 
+  geom_errorbar(aes(ymax = sac_vpeak + 2*sac_vpeak_sd, ymin = sac_vpeak - 2*sac_vpeak_sd), 
+                width = 0, size = 1, alpha = 0.5) + 
+  geom_errorbarh(aes(xmax = sac_display_off_latency + 2*sac_display_off_latency_sd, 
+                     xmin = sac_display_off_latency - 2*sac_display_off_latency_sd), 
+                 height = 0, size = 1, alpha = 0.5) + 
+  geom_point(size = 1.5) + 
+  geom_line(size = 1.5) + 
+  coord_cartesian(expand = FALSE, xlim = peak_xlim_sacmetrics) + 
+  scale_color_manual(values = experiment_colorscale) + 
+  scale_fill_manual(values = experiment_colorscale) + 
+  scale_alpha_manual(values = seq(0.2, 1, length.out = 8)) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Saccade peak\nvelocity [dva/s]",
+       color = "Experiment", fill = "Experiment") + 
+  theme_minimal(base_size = 15) + ocimTheme()
+p_sac_vpeak
+
+ezStats(data = ISSP_mean_sac_subj[experiment_f=="1"], 
+        dv = .(sac_vpeak), wid = .(subj_id), 
+        within = .(stim_dur_ms_f) )
+
+ezStats(data = ISSP_mean_sac_subj[experiment_f=="2"], 
+        dv = .(sac_vpeak), wid = .(subj_id), 
+        within = .(stim_dur_ms_f) )
+
+```
+
+Here is the Plot für Saccade Amplitude and Exp 1&2
+```{r}
+amp_xlim_sacmetrics <- c(-60, 30)
+p_sac_amp <- ggplot(data = ISSP_mean_sac, 
+                    aes(x = sac_display_off_latency, y = sac_amp, color = experiment_f)) + 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_line(data = ISSP_mean_sac_subj, 
+            aes(x = sac_display_off_latency, y = sac_amp.w, color = experiment_f, group = paste(experiment_f, subj_id)), 
+            size = 0.5, alpha = 0.2) + 
+  geom_errorbar(aes(ymax = sac_amp + 2*sac_amp_sd, ymin = sac_amp - 2*sac_amp_sd), 
+                width = 0, size = 1, alpha = 0.5) + 
+  geom_errorbarh(aes(xmax = sac_display_off_latency + 2*sac_display_off_latency_sd, 
+                     xmin = sac_display_off_latency - 2*sac_display_off_latency_sd), 
+                 height = 0, size = 1, alpha = 0.5) + 
+  geom_point(size = 1.5) + 
+  geom_line(size = 1.5) + 
+  coord_cartesian(expand = FALSE, xlim = amp_xlim_sacmetrics) + 
+  scale_color_manual(values = experiment_colorscale) + 
+  scale_fill_manual(values = experiment_colorscale) + 
+  scale_alpha_manual(values = seq(0.2, 1, length.out = 8)) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Saccade\namplitude [dva]",
+       color = "Experiment", fill = "Experiment") + 
+  theme_minimal(base_size = 15) + ocimTheme()
+p_sac_amp
+
+ezStats(data = ISSP_mean_sac_subj[experiment_f=="1"], 
+        dv = .(sac_amp), wid = .(subj_id), 
+        within = .(stim_dur_ms_f) )
+
+ezStats(data = ISSP_mean_sac_subj[experiment_f=="2"], 
+        dv = .(sac_amp), wid = .(subj_id), 
+        within = .(stim_dur_ms_f) )
+
+
+```
+Here I wanna do the histogramm for number of trials and display duration for Exp. 1&2 
+```{r}
+histo_xlim_pres <- c(-70, 60)
+
+# first, present the metric display offset re saccade offset
+p_histo12 <- ggplot(data = issp %>% filter(experiment %in% c(1, 2)), aes(x = sac_display_off_latency, 
+                                               color = experiment_f, group = paste(stim_dur_ms_f, experiment_f), 
+                                               alpha = stim_dur_ms_f)) + 
+  geom_hline(aes(color = experiment_f, yintercept = 0), size = 2) + 
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) + 
+  geom_freqpoly(binwidth = 4, size = 1.5) + 
+  #geom_density(size = 1.5) + 
+  coord_cartesian(expand = FALSE, xlim = histo_xlim_pres ) + 
+  scale_color_manual(values = experiment_colorscale) + 
+  scale_fill_manual(values = experiment_colorscale) + 
+  scale_alpha_manual(values = seq(0.2, 1, length.out = 8)) + 
+  labs(x = "Display offset re saccade offset [ms]", y = "Number of trials",
+       color = "Experiment", fill = "Experiment", alpha = "Display\nduration [ms]") + 
+  theme_minimal(base_size = 15) + ocimTheme() + 
+  facet_wrap(~experiment_f, nrow = 3, scales = "free_y", strip.position = "right") + guides(color = "none")
+p_histo12
+```
+
+Here I wanna do the frequency plot for the mean distribution of all samples and observers for replay
+no vari. times for all observers, no individual saccade statistics
 ```{r}
 plot_freq <- ggplot(data = ISSPR_prop_correct_agg, 
-                          aes(x=replay_sac_display_off_latency, fill=stim_dur_ms_f, color=stim_dur_ms_f)) + 
-  #geom_histogram(binwidth = 3)  +
-  geom_freqpoly(binwidth =1 )  +
-  #geom_density(alpha= 0.1, adjust = 1/2) + 
-  geom_vline(aes(xintercept=0),color="grey", linetype="dashed", size=1) +  
-  ocimTheme()+ scale_fill_viridis_d(option = "D", begin = 0, end = 1)+  theme(legend.position = "bottom")+
-  labs(x="Display onset- saccade onset [ms]", y="Frequency", 
-       fill = "Display duration [ms]", color = "Display duration [ms]")
+                    aes(x = replay_sac_display_off_latency, 
+                        fill = factor(common_subj_id_exists_replay), 
+                        color = factor(common_subj_id_exists_replay))) + 
+  geom_hline(aes(color = factor(experiment), yintercept = 0), size = 2) +   
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +       
+  geom_freqpoly(binwidth = 4, size = 1.5) +                           
+  coord_cartesian(expand = FALSE, xlim = c(-70, 60)) +               
+  scale_color_manual(values = experiment_colorscale,  labels = c("4" = "Replay"))+                       
+  scale_fill_manual(values = experiment_colorscale,  labels = c("4" = "Replay")) +                   
+  labs(x = "Display offset re saccade offset [ms]", y = "Frequency", 
+       fill = "Observers", color = "Observers") +
+  theme_minimal(base_size = 15)
 
 plot_freq
-
 ```
 
 Here we will create BINS for the latency 
