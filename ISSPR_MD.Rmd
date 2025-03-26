@@ -500,6 +500,8 @@ Mara Comment: Would it be better to different here excatly that is is only Sacca
 Richard Comment: Yes, saccade (Exp. 2) would certainly be more suitable. But I guess you can edit this manually later when you export the figure as svg or pdf. 
 Furthermore, if you use ezPlot, then you should try to keep the style consistent to your other figures. Especially, different color schemes suggest that something else is plotted there. As you have seen below, I have tried my best to adjust the style to match the figure above, but line and point size is still not the same. Whatever you do in this chunk, please also apply to all the subsequent ezPlot commands.
 
+Ok. I tried to add the style first to all subsequent ezPlots. With the legend and the color Iam still unsure here.
+
 Finally, one important thing: Here you use the same color scale you use to compare original vs suppressed (or unfiltered vs filtered, you would have to decide for one way) to compare experiments! That is extremely confusing and should really be avoided. When you compare viewing conditions (saccade vs replay) you should really use a different color scale.
 
 ```{r}
@@ -517,7 +519,7 @@ table(ISSPR_prop_correct$experiment, ISSPR_prop_correct$common_subj_id,
 table(ISSPR_data_without_overlap_metrics$stim_dur_ms, useNA = "ifany")
 common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id!="all others" &
                                                     stim_dur_ms > 30 & stim_dur_ms < 60 &
-                                                    sac_suppression_f=="unfiltered"] # choose condition here!
+                                                    sac_suppression_f=="filtered"] # choose condition here!
 table(common_subj_id_subset_ISSPR$experiment, common_subj_id_subset_ISSPR$common_subj_id)
 table(common_subj_id_subset_ISSPR$stim_dur_ms, common_subj_id_subset_ISSPR$common_subj_id)
 
@@ -586,9 +588,15 @@ ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(corre
        x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
       labs(y = "Proportion scene correctly matched")+
       labs(x = "Display Duration [ms]",
-       color = "Task",
-       linetype = "Task",
-       shape = "Task")
+       color = "Task"#,
+       #linetype = "Task",
+       #shape = "Task"
+  ) +
+  scale_linetype_manual(values = c("solid", "solid")) + 
+  scale_shape_manual(values = c(15, 15)) +
+  theme_classic(base_size = 12.5) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
 ```
 
 Subj. not in both conditions; between (bw) design N=11; no-common subjects!
@@ -657,9 +665,15 @@ ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
        x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
       labs(y = "Proportion scene correctly matched")+
       labs(x = "Display Duration [ms]",
-       color = "Task",
-       linetype = "Task",
-       shape = "Task")
+        color = "Task"#,
+       #linetype = "Task",
+       #shape = "Task"
+  ) +
+  scale_linetype_manual(values = c("solid", "solid")) + 
+  scale_shape_manual(values = c(15, 15)) +
+  theme_classic(base_size = 12.5) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
 
 ```
 Subj. not in both conditions; between (bw) design N=11; no-common subjects!
@@ -700,9 +714,15 @@ ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
        x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
       labs(y = "Proportion scene correctly matched")+
        labs(x = "Display Duration [ms]",
-       color = "Task",
-       linetype = "Task",
-       shape = "Task")
+       color = "Task"#,
+       #linetype = "Task",
+       #shape = "Task"
+  ) +
+  scale_linetype_manual(values = c("solid", "solid")) + 
+  scale_shape_manual(values = c(15, 15)) +
+  theme_classic(base_size = 12.5) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
 
 ```
 Here we start "replay-ISSP 1& 2 -within": N=3 mit Faktor stim_dur_ms (8.33-58.33, 7 levels).
@@ -753,10 +773,15 @@ ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
        within = .(fixreplay, stim_dur_ms_f),
        x = .(stim_dur_ms_f), split = .(fixreplay), type = 1)+scale_color_manual(values = experiment_colorscale)+ labs(y = "Proportion scene correctly matched")+
     labs(x = "Display Duration [ms]",
-       color = "Task",
-       linetype = "Task",
-       shape = "Task")
-
+       color = "Task"#,
+       #linetype = "Task",
+       #shape = "Task"
+  ) +
+  scale_linetype_manual(values = c("solid", "solid")) + 
+  scale_shape_manual(values = c(15, 15)) +
+  theme_classic(base_size = 12.5) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
 
 ```
 Here I preparing for "proportion correct" by subject (N=20)
@@ -882,7 +907,7 @@ Richard: Not sure what you mean by "the legend changed in a wrong way". Is it th
 Generally, indeed, you want to keep the color scale, as well as the associated labels consistent across plots. You can do that easily by updating the levels(mydata$sac_suppression_f), see below. 
 
 ```{r}
-#levels(p_correct_replay_latency$sac_suppression_f) <- c("original", "suppressed") # or something else?
+levels(p_correct_replay_latency$sac_suppression_f) <- c("original", "suppressed") # or something else?
 
 prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency,
                            aes(x = replay_sac_display_off_latency, y = P_mean,
@@ -1099,8 +1124,8 @@ plot_freq <- ggplot(data = ISSPR_data_without_overlap_metrics,
   coord_cartesian(expand = FALSE, xlim = c(-70, 60)) +
   scale_color_manual(values = experiment_colorscale,  labels = c("4" = "Replay"))+
   scale_fill_manual(values = experiment_colorscale,  labels = c("4" = "Replay")) +
-  labs(x = "Display offset re saccade offset [ms]", y = "Frequency",
-       fill = "Observers", color = "Observers") +
+  labs(x = "Display offset re saccade offset [ms]", y = "Number of trials",
+       fill = "Observers", color = "Observers", alpha = "Display\nduration [ms]") +
   theme_minimal(base_size = 15)
 
 plot_freq
