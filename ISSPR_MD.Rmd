@@ -1114,19 +1114,22 @@ Richard: Well, yes, you use the wrong data, that is, the aggregated data (one po
 Again: the color scale in the plot above is the same you use to compare original vs suppressed. Make sure this can be visually disentangled. Also, the plot is basically the one from the manuscript and I'm not sure whether that's a good idea with Martin and Sven as your referees. 
 
 ```{r}
-plot_freq <- ggplot(data = ISSPR_data_without_overlap_metrics,
+plot_freq <- ggplot(data = ISSPR_data_without_overlap_metrics %>%
+                      filter(experiment == 4),  # Zeige nur das Replay-Experiment
                     aes(x = replay_sac_display_off_latency,
-                        color = factor(experiment), group = paste(stim_dur_ms_f, experiment),
-                                               alpha = stim_dur_ms_f)) +
-  geom_hline(aes(color = factor(experiment), yintercept = 0), size = 2) +
+                        color = factor(stim_dur_ms_f),  # Farbe für Display-Dauer
+                        group = stim_dur_ms_f)) +
+  geom_hline(yintercept = 0, size = 2, color = "gray60") +
   geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +
   geom_freqpoly(binwidth = 4, size = 1.5) +
   coord_cartesian(expand = FALSE, xlim = c(-70, 60)) +
-  scale_color_manual(values = experiment_colorscale,  labels = c("4" = "Replay"))+
-  scale_fill_manual(values = experiment_colorscale,  labels = c("4" = "Replay")) +
-  labs(x = "Display offset re saccade offset [ms]", y = "Number of trials",
-       fill = "Observers", color = "Observers", alpha = "Display\nduration [ms]") +
-  theme_minimal(base_size = 15)
+  scale_color_viridis_d(name = "Display\nduration [ms]") +  # Farbskala
+  labs(x = "Display offset re saccade offset [ms]",
+       y = "Number of trials") +
+  theme_minimal(base_size = 15) +
+  ocimTheme() +
+  theme(plot.margin = margin(t = 10, r = 10, b = 10, l = 10),
+        legend.box.margin = margin(5, 5, 5, 5))
 
 plot_freq
 ```
