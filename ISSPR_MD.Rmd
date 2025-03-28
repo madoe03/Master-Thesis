@@ -469,6 +469,7 @@ ggplot()+
                  group = paste(experiment, sac_suppression_f)), size = 2) +
   geom_line(data = ISSPR_prop_correct_agg,
              aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f,
+                 linetype = fixreplay,
                  group = paste(experiment, sac_suppression_f)),
             size = 1.5, alpha = 0.8) +
   geom_errorbar(data = ISSPR_prop_correct_agg,
@@ -484,7 +485,7 @@ ggplot()+
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))+
   scale_shape_manual(values = c(15, 17)) +
-  scale_linetype_manual(values = c("dashed", "solid")) +
+  scale_linetype_manual(values = rev(c("dashed", "solid"))) +
   scale_y_continuous(expand = c(0,0)) +
   scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) +
   labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched",
@@ -519,7 +520,7 @@ table(ISSPR_prop_correct$experiment, ISSPR_prop_correct$common_subj_id,
 table(ISSPR_data_without_overlap_metrics$stim_dur_ms, useNA = "ifany")
 common_subj_id_subset_ISSPR <- ISSPR_prop_correct[common_subj_id!="all others" &
                                                     stim_dur_ms > 30 & stim_dur_ms < 60 &
-                                                    sac_suppression_f=="filtered"] # choose condition here!
+                                                    sac_suppression_f=="unfiltered"] # choose condition here!
 table(common_subj_id_subset_ISSPR$experiment, common_subj_id_subset_ISSPR$common_subj_id)
 table(common_subj_id_subset_ISSPR$stim_dur_ms, common_subj_id_subset_ISSPR$common_subj_id)
 
@@ -545,19 +546,19 @@ ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct),
        ) +
   labs(y = "Proportion scene correctly matched")+
   labs(x = "Display Duration [ms]",
-       color = "Task"#,
-       #linetype = "Task",
-       #shape = "Task"
+       color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "Saccade (Exp. 2) vs Replay original"
   ) +
-  scale_linetype_manual(values = c("solid", "solid")) + 
-  scale_shape_manual(values = c(15, 15)) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
   theme_classic(base_size = 12.5) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
-  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
+  scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
   
-  
-
-
 ```
 
 
@@ -584,19 +585,23 @@ ezStats(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(corr
         within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay))
 
 ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
-        within = .(fixreplay, stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
-      labs(y = "Proportion scene correctly matched")+
-      labs(x = "Display Duration [ms]",
-       color = "Task"#,
-       #linetype = "Task",
-       #shape = "Task"
+       within = .(fixreplay, stim_dur_ms_f),
+       x = .(stim_dur_ms_f), split = .(fixreplay), 
+       bar_width = 0.00001)+
+  labs(y = "Proportion scene correctly matched")+
+  labs(x = "Display Duration [ms]",
+       color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "Saccade (Exp. 2) vs Replay suppressed"
   ) +
-  scale_linetype_manual(values = c("solid", "solid")) + 
-  scale_shape_manual(values = c(15, 15)) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
   theme_classic(base_size = 12.5) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
-  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
+  scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
 ```
 
 Subj. not in both conditions; between (bw) design N=11; no-common subjects!
