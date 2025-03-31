@@ -584,7 +584,7 @@ ezANOVA(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(corr
 ezStats(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
         within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay))
 
-ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
+matchedsuppressed <- ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
        within = .(fixreplay, stim_dur_ms_f),
        x = .(stim_dur_ms_f), split = .(fixreplay), 
        bar_width = 0.00001)+
@@ -602,7 +602,58 @@ ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(corre
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
                      guide = guide_legend(reverse = TRUE))
+matchedsuppressed 
+
+
+
 ```
+
+Second: within subject (VP (N=9) data from Exp 2 + Replay) for the UNFILTERED condition.
+```{r}
+common_subj_id_subset_ISSPR_filt <- ISSPR_prop_correct[common_subj_id!="all others" &
+                                                         stim_dur_ms > 30 & stim_dur_ms < 60 &
+                                                         sac_suppression_f=="unfiltered"] # choose condition
+
+# okay, merge
+subset_ISSPexperiments_filt <- rbindlist(list(common_subj_id_subset_issp12,
+                                              common_subj_id_subset_ISSPR_filt),
+                                         fill = TRUE)
+# make sure we have the variable stim_dur_ms_f for ANOVA in both frames
+table(subset_ISSPexperiments_filt$common_subj_id, subset_ISSPexperiments_filt$stim_dur_ms_f,
+      subset_ISSPexperiments_filt$fixreplay, useNA = "ifany")
+
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+
+ezStats(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
+        within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay))
+
+matchedoriginal <- ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
+       within = .(fixreplay, stim_dur_ms_f),
+       x = .(stim_dur_ms_f), split = .(fixreplay), 
+       bar_width = 0.00001)+
+  labs(y = "Proportion scene correctly matched")+
+  labs(x = "Display Duration [ms]",
+       color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "Saccade (Exp. 2) vs Replay Original"
+  ) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
+  theme_classic(base_size = 12.5) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
+
+matchedoriginal
+
+```
+
+
+
 
 Subj. not in both conditions; between (bw) design N=11; no-common subjects!
 "Original condition"
@@ -665,20 +716,28 @@ ezStats(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
         within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay))
 
 # plot to evaluate ANOVA results
-ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
+unmatchedoriginalplot <- ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
        between = .(fixreplay), within = .(stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
+       x = .(stim_dur_ms_f), split = .(fixreplay), bar_width=0.00001)+scale_color_manual(values = experiment_colorscale)+
       labs(y = "Proportion scene correctly matched")+
       labs(x = "Display Duration [ms]",
-        color = "Task"#,
-       #linetype = "Task",
-       #shape = "Task"
+              color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "Subj. not in both conditions vs. Replay original"
   ) +
-  scale_linetype_manual(values = c("solid", "solid")) + 
-  scale_shape_manual(values = c(15, 15)) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
   theme_classic(base_size = 12.5) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
-  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
+  scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
+           
+           
+unmatchedoriginalplot           
+           
+    
 
 ```
 Subj. not in both conditions; between (bw) design N=11; no-common subjects!
@@ -714,20 +773,26 @@ ezStats(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
 
 
 # plot to evaluate ANOVA results
-ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
+unmatchedsuppressedplot <- ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
        between = .(fixreplay), within = .(stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
+       x = .(stim_dur_ms_f), split = .(fixreplay), bar_width=0.00001)+scale_color_manual(values = experiment_colorscale)+
       labs(y = "Proportion scene correctly matched")+
        labs(x = "Display Duration [ms]",
-       color = "Task"#,
-       #linetype = "Task",
-       #shape = "Task"
+      color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "Subj. not in both conditions vs. Replay suppressed"
   ) +
-  scale_linetype_manual(values = c("solid", "solid")) + 
-  scale_shape_manual(values = c(15, 15)) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
   theme_classic(base_size = 12.5) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
-  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
+  scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
+
+unmatchedsuppressedplot
+
 
 ```
 Here we start "replay-ISSP 1& 2 -within": N=3 mit Faktor stim_dur_ms (8.33-58.33, 7 levels).
@@ -735,7 +800,7 @@ So who are the subjects that were tested in all three experiments? It's 1-3 by t
 TO DO: do the above for unfiltered vs filtered conditions- change it for the two plots for the thesis!
 Mara Comment: Here I have no p[GG] values; also write it in the docs document (Final_MT)
 
-Richard: Well, yes, apparently there are too few subjects for assumption tests. You can state that no p[GG] were available and why.
+Richard: Well, yes, apparently there are too few subjects for assumption tests. You can state that no p[GG] were available and why. ORIGINAL 
 
 ```{r}
 # saccade experiments
@@ -774,21 +839,93 @@ ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
         #within = .(fixreplay, stim_dur_ms_f), type = 1)
 
 # plot to evaluate ANOVA results
-ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
+allexporiginal <- ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
        within = .(fixreplay, stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay), type = 1)+scale_color_manual(values = experiment_colorscale)+ labs(y = "Proportion scene correctly matched")+
+       x = .(stim_dur_ms_f), split = .(fixreplay) , bar_width=0.00001, type = 1)+scale_color_manual(values = experiment_colorscale)+ labs(y = "Proportion scene correctly matched")+
     labs(x = "Display Duration [ms]",
-       color = "Task"#,
-       #linetype = "Task",
-       #shape = "Task"
+      color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "All Experiments vs. Replay Original"
   ) +
-  scale_linetype_manual(values = c("solid", "solid")) + 
-  scale_shape_manual(values = c(15, 15)) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
   theme_classic(base_size = 12.5) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
-  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
+  scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
+
+
+allexporiginal 
 
 ```
+
+```{r}
+# saccade experiments
+common_three_sac <- issp12_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                          stim_dur_ms < 60]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+# as you can see now, people have 2 values at 33.33 - we can take the average here
+common_three_sac <- common_three_sac[ , .(correct = mean(correct)),
+                                      by = .(fixreplay, common_subj_id, stim_dur_ms, stim_dur_ms_f)]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+
+# replay experiments
+common_three_replay <- ISSPR_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                            stim_dur_ms < 60 &
+                                            sac_suppression_f=="filtered"] # choose condition here!
+table(common_three_replay$common_subj_id, common_three_replay$stim_dur_ms)
+
+# combine the two sets to perform an ANOVA
+common_three <- rbindlist(list(common_three_sac, common_three_replay),
+                                    fill = TRUE)
+table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixreplay)
+
+# here I make smth wrong like above (between design); ANOVA did not work
+# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
+## perform ANOVA
+# use type 1 ANOVA, as we have too little subjects for assumption tests
+# use ANOVA once for filtered and once for unfiltered condition for thesis!
+ezANOVA(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE, type = 1)
+
+#also take care here, if changing the condition (filtered. vs unfiltered)
+ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay), type = 1)
+
+#ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        #within = .(fixreplay, stim_dur_ms_f), type = 1)
+
+# plot to evaluate ANOVA results
+allexsuppressed <- ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
+       within = .(fixreplay, stim_dur_ms_f),
+       x = .(stim_dur_ms_f), split = .(fixreplay) , bar_width=0.00001, type = 1)+scale_color_manual(values = experiment_colorscale)+ labs(y = "Proportion scene correctly matched")+
+    labs(x = "Display Duration [ms]",
+      color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "All Experiments vs. Replay Suppressed"
+  ) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
+  theme_classic(base_size = 12.5) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
+
+
+allexsuppressed
+```
+Here I wanna grid the Plots; six total for the different conditions
+```{r}
+totalplot <- plot_grid(matchedoriginal, matchedsuppressed, unmatchedoriginalplot, unmatchedsuppressedplot, allexporiginal, allexsuppressed, 
+                                         nrow = 3, align = "hv", axis = "tblr")
+totalplot
+```
+
+``` 
 Here I preparing for "proportion correct" by subject (N=20)
 ```{r}
 ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
