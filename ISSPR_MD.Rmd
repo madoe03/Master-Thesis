@@ -81,7 +81,7 @@ bin_to_numeric <- function(input, splits_used = c("\\(", "\\)", "\\[", "\\]", ",
   return(mean(as.numeric(strsplits(x = as.character(input), splits = splits_used))))
 }
 
-ocimTheme <- function(base_size=15, base_family="Helvetica") {
+ocimTheme <- function(base_size=12, base_family="Helvetica") {
   theme_classic(base_size=base_size, base_family=base_family) %+replace%
     theme(
       # size of text
@@ -593,12 +593,12 @@ matchedsuppressed <- ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_s
        color = "Task",
        linetype = "Task",
        shape = "Task", 
-       title = "Saccade (Exp. 2) vs Replay suppressed"
+       title = "Matched Analysis 'Suppressed'"
   ) +
   geom_hline(yintercept = 0.5, linetype = "dotted") + 
   scale_linetype_manual(values = c("solid", "dashed")) + 
   scale_shape_manual(values = c(15, 17)) +
-  theme_classic(base_size = 12.5) + ocimTheme() +
+  theme_classic(base_size = 12) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
                      guide = guide_legend(reverse = TRUE))
@@ -638,12 +638,12 @@ matchedoriginal <- ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_sub
        color = "Task",
        linetype = "Task",
        shape = "Task", 
-       title = "Saccade (Exp. 2) vs Replay Original"
+       title = "Matched Analysis 'Original'"
   ) +
   geom_hline(yintercept = 0.5, linetype = "dotted") + 
   scale_linetype_manual(values = c("solid", "dashed")) + 
   scale_shape_manual(values = c(15, 17)) +
-  theme_classic(base_size = 12.5) + ocimTheme() +
+  theme_classic(base_size = 12) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
                      guide = guide_legend(reverse = TRUE))
@@ -724,12 +724,12 @@ unmatchedoriginalplot <- ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_i
               color = "Task",
        linetype = "Task",
        shape = "Task", 
-       title = "Subj. not in both conditions vs. Replay original"
+       title = "Unmatched Analysis 'Original'"
   ) +
   geom_hline(yintercept = 0.5, linetype = "dotted") + 
   scale_linetype_manual(values = c("solid", "dashed")) + 
   scale_shape_manual(values = c(15, 17)) +
-  theme_classic(base_size = 12.5) + ocimTheme() +
+  theme_classic(base_size = 12) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
                      guide = guide_legend(reverse = TRUE))
@@ -781,12 +781,12 @@ unmatchedsuppressedplot <- ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(
       color = "Task",
        linetype = "Task",
        shape = "Task", 
-       title = "Subj. not in both conditions vs. Replay suppressed"
+       title = "Unmatched Analysis 'Suppressed'"
   ) +
   geom_hline(yintercept = 0.5, linetype = "dotted") + 
   scale_linetype_manual(values = c("solid", "dashed")) + 
   scale_shape_manual(values = c(15, 17)) +
-  theme_classic(base_size = 12.5) + ocimTheme() +
+  theme_classic(base_size = 12) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
                      guide = guide_legend(reverse = TRUE))
@@ -846,12 +846,12 @@ allexporiginal <- ezPlot(data = common_three, wid = .(common_subj_id), dv = .(co
       color = "Task",
        linetype = "Task",
        shape = "Task", 
-       title = "All Experiments vs. Replay Original"
+       title = "All Experiment-Participants 'Original'"
   ) +
   geom_hline(yintercept = 0.5, linetype = "dotted") + 
   scale_linetype_manual(values = c("solid", "dashed")) + 
   scale_shape_manual(values = c(15, 17)) +
-  theme_classic(base_size = 12.5) + ocimTheme() +
+  theme_classic(base_size = 12) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
                      guide = guide_legend(reverse = TRUE))
@@ -905,12 +905,12 @@ allexsuppressed <- ezPlot(data = common_three, wid = .(common_subj_id), dv = .(c
       color = "Task",
        linetype = "Task",
        shape = "Task", 
-       title = "All Experiments vs. Replay Suppressed"
+       title = "All Experiment-Participants 'Suppressed'"
   ) +
   geom_hline(yintercept = 0.5, linetype = "dotted") + 
   scale_linetype_manual(values = c("solid", "dashed")) + 
   scale_shape_manual(values = c(15, 17)) +
-  theme_classic(base_size = 12.5) + ocimTheme() +
+  theme_classic(base_size = 12) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
                      guide = guide_legend(reverse = TRUE))
@@ -920,9 +920,11 @@ allexsuppressed
 ```
 Here I wanna grid the Plots; six total for the different conditions
 ```{r}
-totalplot <- plot_grid(matchedoriginal, matchedsuppressed, unmatchedoriginalplot, unmatchedsuppressedplot, allexporiginal, allexsuppressed, 
+totalplot <- plot_grid(matchedoriginal, matchedsuppressed, unmatchedoriginalplot, unmatchedsuppressedplot, allexporiginal, allexsuppressed, #legend.position="none",
                                          nrow = 3, align = "hv", axis = "tblr")
 totalplot
+
+ggsave("C:/Users/dreid/OneDrive/Dokumente/Masterarbeit/totalplot.pdf", totalplot, width = 28, height = 22, units = "cm", dpi = 300)
 ```
 
 ``` 
