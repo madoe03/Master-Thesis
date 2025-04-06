@@ -169,6 +169,11 @@ library(mlr)
 library(gsignal)
 library(plyr)
 library(dplyr)
+```
+
+    ## Warning: Paket 'dplyr' wurde unter R Version 4.3.3 erstellt
+
+``` r
 library(boot)
 library(ggpubr)
 library(ggiraph)
@@ -186,6 +191,14 @@ library(scales)
 library (tidyr)
 library(gridExtra)
 ```
+
+    ## Warning: Paket 'gridExtra' wurde unter R Version 4.3.3 erstellt
+
+``` r
+library(cowplot)
+```
+
+    ## Warning: Paket 'cowplot' wurde unter R Version 4.3.3 erstellt
 
 Some important basics before running main parts
 
@@ -205,7 +218,7 @@ bin_to_numeric <- function(input, splits_used = c("\\(", "\\)", "\\[", "\\]", ",
   return(mean(as.numeric(strsplits(x = as.character(input), splits = splits_used))))
 }
 
-ocimTheme <- function(base_size=15, base_family="Helvetica") {
+ocimTheme <- function(base_size=12, base_family="Helvetica") {
   theme_classic(base_size=base_size, base_family=base_family) %+replace%
     theme(
       # size of text
@@ -764,11 +777,9 @@ ISSPR_prop_subj <- ggplot(data = ISSPR_prop_correct[common_subj_id != "all other
 ISSPR_prop_subj
 ```
 
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_line()`).
+    ## Warning: Removed 1 row containing missing values (`geom_line()`).
 
-    ## Warning: Removed 5 rows containing missing values or values outside the scale range
-    ## (`geom_point()`).
+    ## Warning: Removed 5 rows containing missing values (`geom_point()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-14-1.svg)<!-- -->
 
@@ -802,8 +813,7 @@ ISSPR_prop <- ggplot(data = ISSPR_prop_correct_agg,
 ISSPR_prop
 ```
 
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_errorbarh()`).
+    ## Warning: Removed 1 rows containing missing values (`geom_errorbarh()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-15-1.svg)<!-- -->
 
@@ -876,6 +886,7 @@ ggplot()+
                  group = paste(experiment, sac_suppression_f)), size = 2) +
   geom_line(data = ISSPR_prop_correct_agg,
              aes(x = replay_sac_display_off_latency, y = correct, color = sac_suppression_f,
+                 linetype = fixreplay,
                  group = paste(experiment, sac_suppression_f)),
             size = 1.5, alpha = 0.8) +
   geom_errorbar(data = ISSPR_prop_correct_agg,
@@ -891,7 +902,7 @@ ggplot()+
   coord_cartesian(ylim = c(0.45, 1)) +
   scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))+
   scale_shape_manual(values = c(15, 17)) +
-  scale_linetype_manual(values = c("dashed", "solid")) +
+  scale_linetype_manual(values = rev(c("dashed", "solid"))) +
   scale_y_continuous(expand = c(0,0)) +
   scale_x_continuous(breaks = c(-40, -30, -20, -10, 0, 10, 20), limits = figure2_xlim_issp12) +
   labs(x = "Display offset re saccade offset [ms]", y = "Proportion scene correctly matched",
@@ -900,8 +911,7 @@ ggplot()+
   facet_wrap(~common_subj_id_exists_replay)
 ```
 
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_errorbarh()`).
+    ## Warning: Removed 1 rows containing missing values (`geom_errorbarh()`).
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-17-1.svg)<!-- -->
 
@@ -918,6 +928,9 @@ color schemes suggest that something else is plotted there. As you have
 seen below, I have tried my best to adjust the style to match the figure
 above, but line and point size is still not the same. Whatever you do in
 this chunk, please also apply to all the subsequent ezPlot commands.
+
+Ok. I tried to add the style first to all subsequent ezPlots. With the
+legend and the color Iam still unsure here.
 
 Finally, one important thing: Here you use the same color scale you use
 to compare original vs suppressed (or unfiltered vs filtered, you would
@@ -1117,15 +1130,18 @@ ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct),
        ) +
   labs(y = "Proportion scene correctly matched")+
   labs(x = "Display Duration [ms]",
-       color = "Task"#,
-       #linetype = "Task",
-       #shape = "Task"
+       color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "Saccade (Exp. 2) vs Replay original"
   ) +
-  scale_linetype_manual(values = c("solid", "solid")) + 
-  scale_shape_manual(values = c(15, 15)) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
   theme_classic(base_size = 12.5) + ocimTheme() +
   coord_cartesian(ylim = c(0.45, 1)) +
-  scale_color_manual(values = experiment_colorscale, guide = guide_legend(reverse = TRUE))
+  scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
 ```
 
     ## Warning: Converting "common_subj_id" to factor for ANOVA.
@@ -1239,14 +1255,24 @@ ezStats(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(corr
     ## 2 Saccade (Exp. 1&2) 9 0.7861483 0.08361074 0.03310811
 
 ``` r
-ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
-        within = .(fixreplay, stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
-      labs(y = "Proportion scene correctly matched")+
-      labs(x = "Display Duration [ms]",
+matchedsuppressed <- ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
+       within = .(fixreplay, stim_dur_ms_f),
+       x = .(stim_dur_ms_f), split = .(fixreplay), 
+       bar_width = 0.00001)+
+  labs(y = "Proportion scene correctly matched")+
+  labs(x = "Display Duration [ms]",
        color = "Task",
        linetype = "Task",
-       shape = "Task")
+       shape = "Task", 
+       title = "Matched Analysis 'Suppressed'"
+  ) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
+  theme_classic(base_size = 12) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
 ```
 
     ## Warning: Converting "common_subj_id" to factor for ANOVA.
@@ -1256,7 +1282,145 @@ ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(corre
     ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
     ## Refactoring for ANOVA.
 
+``` r
+matchedsuppressed 
+```
+
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-19-1.svg)<!-- -->
+
+Second: within subject (VP (N=9) data from Exp 2 + Replay) for the
+UNFILTERED condition.
+
+``` r
+common_subj_id_subset_ISSPR_filt <- ISSPR_prop_correct[common_subj_id!="all others" &
+                                                         stim_dur_ms > 30 & stim_dur_ms < 60 &
+                                                         sac_suppression_f=="unfiltered"] # choose condition
+
+# okay, merge
+subset_ISSPexperiments_filt <- rbindlist(list(common_subj_id_subset_issp12,
+                                              common_subj_id_subset_ISSPR_filt),
+                                         fill = TRUE)
+# make sure we have the variable stim_dur_ms_f for ANOVA in both frames
+table(subset_ISSPexperiments_filt$common_subj_id, subset_ISSPexperiments_filt$stim_dur_ms_f,
+      subset_ISSPexperiments_filt$fixreplay, useNA = "ifany")
+```
+
+    ## , ,  = Replay (Exp. 4)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    0     0  0     1     1  1     1     0  0
+    ##   2     0     0  0     1     1  1     1     0  0
+    ##   3     0     0  0     1     1  1     1     0  0
+    ##   4     0     0  0     1     1  1     1     0  0
+    ##   5     0     0  0     1     1  1     1     0  0
+    ##   6     0     0  0     1     1  1     1     0  0
+    ##   7     0     0  0     1     1  1     1     0  0
+    ##   8     0     0  0     1     1  1     1     0  0
+    ##   9     0     0  0     1     1  1     1     0  0
+    ## 
+    ## , ,  = Saccade (Exp. 1&2)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    0     0  0     1     1  1     1     0  0
+    ##   2     0     0  0     1     1  1     1     0  0
+    ##   3     0     0  0     1     1  1     1     0  0
+    ##   4     0     0  0     1     1  1     1     0  0
+    ##   5     0     0  0     1     1  1     1     0  0
+    ##   6     0     0  0     1     1  1     1     0  0
+    ##   7     0     0  0     1     1  1     1     0  0
+    ##   8     0     0  0     1     1  1     1     0  0
+    ##   9     0     0  0     1     1  1     1     0  0
+
+``` r
+# perform ANOVA
+ezANOVA(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+    ## $ANOVA
+    ##                    Effect DFn DFd          SSn        SSd          F
+    ## 1             (Intercept)   1   8 43.646529352 0.36782904 949.278595
+    ## 2               fixreplay   1   8  0.004113641 0.02818839   1.167471
+    ## 3           stim_dur_ms_f   3  24  0.310094491 0.06776872  36.606206
+    ## 4 fixreplay:stim_dur_ms_f   3  24  0.022411579 0.03785771   4.735961
+    ##              p p<.05         ges
+    ## 1 1.338202e-09     * 0.988637268
+    ## 2 3.114152e-01       0.008133624
+    ## 3 4.076388e-09     * 0.382012859
+    ## 4 9.842201e-03     * 0.042765663
+    ## 
+    ## $`Mauchly's Test for Sphericity`
+    ##                    Effect         W         p p<.05
+    ## 3           stim_dur_ms_f 0.5066046 0.4749752      
+    ## 4 fixreplay:stim_dur_ms_f 0.8783867 0.9725533      
+    ## 
+    ## $`Sphericity Corrections`
+    ##                    Effect       GGe        p[GG] p[GG]<.05       HFe
+    ## 3           stim_dur_ms_f 0.6722833 9.740248e-07         * 0.8998408
+    ## 4 fixreplay:stim_dur_ms_f 0.9246474 1.204065e-02         * 1.4648058
+    ##          p[HF] p[HF]<.05
+    ## 3 2.161679e-08         *
+    ## 4 9.842201e-03         *
+
+``` r
+ezStats(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
+        within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay))
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: Collapsing data to cell means first using variables supplied to
+    ## "within_full", then collapsing the resulting means to means for the cells
+    ## supplied to "within".
+
+    ##            fixreplay N      Mean         SD       FLSD
+    ## 1    Replay (Exp. 4) 9 0.7710309 0.07338112 0.03226369
+    ## 2 Saccade (Exp. 1&2) 9 0.7861483 0.08361074 0.03226369
+
+``` r
+matchedoriginal <- ezPlot(data = subset_ISSPexperiments_filt, wid = .(common_subj_id), dv = .(correct),
+       within = .(fixreplay, stim_dur_ms_f),
+       x = .(stim_dur_ms_f), split = .(fixreplay), 
+       bar_width = 0.00001)+
+  labs(y = "Proportion scene correctly matched")+
+  labs(x = "Display Duration [ms]",
+       color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "Matched Analysis 'Original'"
+  ) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
+  theme_classic(base_size = 12) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+``` r
+matchedoriginal
+```
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-20-1.svg)<!-- -->
 
 Subj. not in both conditions; between (bw) design N=11; no-common
 subjects! “Original condition”
@@ -1469,14 +1633,23 @@ ezStats(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
 
 ``` r
 # plot to evaluate ANOVA results
-ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
+unmatchedoriginalplot <- ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
        between = .(fixreplay), within = .(stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
+       x = .(stim_dur_ms_f), split = .(fixreplay), bar_width=0.00001)+scale_color_manual(values = experiment_colorscale)+
       labs(y = "Proportion scene correctly matched")+
       labs(x = "Display Duration [ms]",
-       color = "Task",
+              color = "Task",
        linetype = "Task",
-       shape = "Task")
+       shape = "Task", 
+       title = "Unmatched Analysis 'Original'"
+  ) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
+  theme_classic(base_size = 12) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
 ```
 
     ## Warning: Converting "fixreplay" to factor for ANOVA.
@@ -1485,7 +1658,14 @@ ezPlot(data = subset_ISSPexperiments_bw, wid = .(subj_id), dv = .(correct),
     ## across levels of the supplied between-Ss variables. Automatically fixing this
     ## by generating unique wid labels.
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-20-1.svg)<!-- --> Subj. not
+    ## Scale for colour is already present.
+    ## Adding another scale for colour, which will replace the existing scale.
+
+``` r
+unmatchedoriginalplot           
+```
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-21-1.svg)<!-- --> Subj. not
 in both conditions; between (bw) design N=11; no-common subjects!
 “Suppressed condition”
 
@@ -1614,14 +1794,23 @@ ezStats(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
 
 ``` r
 # plot to evaluate ANOVA results
-ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
+unmatchedsuppressedplot <- ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
        between = .(fixreplay), within = .(stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay))+scale_color_manual(values = experiment_colorscale)+
+       x = .(stim_dur_ms_f), split = .(fixreplay), bar_width=0.00001)+scale_color_manual(values = experiment_colorscale)+
       labs(y = "Proportion scene correctly matched")+
        labs(x = "Display Duration [ms]",
-       color = "Task",
+      color = "Task",
        linetype = "Task",
-       shape = "Task")
+       shape = "Task", 
+       title = "Unmatched Analysis 'Suppressed'"
+  ) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
+  theme_classic(base_size = 12) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
 ```
 
     ## Warning: Converting "fixreplay" to factor for ANOVA.
@@ -1630,7 +1819,14 @@ ezPlot(data = subset_ISSPexperiments_bw_sup, wid = .(subj_id), dv = .(correct),
     ## across levels of the supplied between-Ss variables. Automatically fixing this
     ## by generating unique wid labels.
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-21-1.svg)<!-- --> Here we
+    ## Scale for colour is already present.
+    ## Adding another scale for colour, which will replace the existing scale.
+
+``` r
+unmatchedsuppressedplot
+```
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-22-1.svg)<!-- --> Here we
 start “replay-ISSP 1& 2 -within”: N=3 mit Faktor stim_dur_ms
 (8.33-58.33, 7 levels). So who are the subjects that were tested in all
 three experiments? It’s 1-3 by the definition at the top! TO DO: do the
@@ -1639,7 +1835,7 @@ for the thesis! Mara Comment: Here I have no p\[GG\] values; also write
 it in the docs document (Final_MT)
 
 Richard: Well, yes, apparently there are too few subjects for assumption
-tests. You can state that no p\[GG\] were available and why.
+tests. You can state that no p\[GG\] were available and why. ORIGINAL
 
 ``` r
 # saccade experiments
@@ -1753,14 +1949,25 @@ ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
 #ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
         #within = .(fixreplay, stim_dur_ms_f), type = 1)
 
+
+
 # plot to evaluate ANOVA results
-ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
+allexporiginal <- ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
        within = .(fixreplay, stim_dur_ms_f),
-       x = .(stim_dur_ms_f), split = .(fixreplay), type = 1)+scale_color_manual(values = experiment_colorscale)+ labs(y = "Proportion scene correctly matched")+
+       x = .(stim_dur_ms_f), split = .(fixreplay) , bar_width=0.00001, type = 1)+scale_color_manual(values = experiment_colorscale)+ labs(y = "Proportion scene correctly matched")+
     labs(x = "Display Duration [ms]",
-       color = "Task",
+      color = "Task",
        linetype = "Task",
-       shape = "Task")
+       shape = "Task", 
+       title = "All Experiment-Participants 'Original'"
+  ) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
+  theme_classic(base_size = 12) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = c(experiment_colorscale[1], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
 ```
 
     ## Warning: Converting "common_subj_id" to factor for ANOVA.
@@ -1770,8 +1977,293 @@ ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
     ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
     ## Refactoring for ANOVA.
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-22-1.svg)<!-- --> Here I
-preparing for “proportion correct” by subject (N=20)
+    ## Scale for colour is already present.
+    ## Adding another scale for colour, which will replace the existing scale.
+
+``` r
+allexporiginal 
+```
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-23-1.svg)<!-- -->
+
+Here I use stim_dur_ms \< 35 instead of stim_dur_ms \< 60; then
+significant effect vanishes, suggesting that it’s the longer display
+durations that make this difference. ‘ORIGINAL’
+
+``` r
+# saccade experiments
+common_three_sac <- issp12_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                          stim_dur_ms < 35]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33
+    ##   01    1     1  1     2
+    ##   2     1     1  1     2
+    ##   3     1     1  1     2
+
+``` r
+# as you can see now, people have 2 values at 33.33 - we can take the average here
+common_three_sac <- common_three_sac[ , .(correct = mean(correct)),
+                                      by = .(fixreplay, common_subj_id, stim_dur_ms, stim_dur_ms_f)]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33
+    ##   01    1     1  1     1
+    ##   2     1     1  1     1
+    ##   3     1     1  1     1
+
+``` r
+# replay experiments
+common_three_replay <- ISSPR_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                            stim_dur_ms < 35 &
+                                            sac_suppression_f=="unfiltered"] # choose condition here!
+table(common_three_replay$common_subj_id, common_three_replay$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33
+    ##   01    1     1  1     1
+    ##   2     1     1  1     1
+    ##   3     1     1  1     1
+
+``` r
+# combine the two sets to perform an ANOVA
+common_three <- rbindlist(list(common_three_sac, common_three_replay),
+                                    fill = TRUE)
+table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixreplay)
+```
+
+    ## , ,  = Replay (Exp. 4)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    1     1  1     1     0  0     0     0  0
+    ##   2     1     1  1     1     0  0     0     0  0
+    ##   3     1     1  1     1     0  0     0     0  0
+    ## 
+    ## , ,  = Saccade (Exp. 1&2)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    1     1  1     1     0  0     0     0  0
+    ##   2     1     1  1     1     0  0     0     0  0
+    ##   3     1     1  1     1     0  0     0     0  0
+
+``` r
+# here I make smth wrong like above (between design); ANOVA did not work
+# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
+## perform ANOVA
+# use type 1 ANOVA, as we have too little subjects for assumption tests
+# use ANOVA once for filtered and once for unfiltered condition for thesis!
+ezANOVA(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE, type = 1)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+    ## $ANOVA
+    ##                    Effect DFn DFd          SSn         SSd          F         p
+    ## 1               fixreplay   1   2 0.0003123995 0.007128711 0.08764543 0.7951027
+    ## 2           stim_dur_ms_f   3   6 0.0284545952 0.018474315 3.08044928 0.1118760
+    ## 3 fixreplay:stim_dur_ms_f   3   6 0.0092818256 0.020385666 0.91062275 0.4897099
+    ##   p<.05         ges
+    ## 1       0.006747129
+    ## 2       0.382231848
+    ## 3       0.167934480
+
+``` r
+#also take care here, if changing the condition (filtered. vs unfiltered)
+ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay), type = 1)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: Collapsing data to cell means first using variables supplied to
+    ## "within_full", then collapsing the resulting means to means for the cells
+    ## supplied to "within".
+
+    ##            fixreplay N      Mean         SD    FLSD
+    ## 1    Replay (Exp. 4) 3 0.7543152 0.04836366 0.10487
+    ## 2 Saccade (Exp. 1&2) 3 0.7615309 0.03143485 0.10487
+
+``` r
+#ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        #within = .(fixreplay, stim_dur_ms_f), type = 1)
+```
+
+``` r
+# saccade experiments
+common_three_sac <- issp12_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                          stim_dur_ms < 60]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33
+    ##   01    1     1  1     2     1  1     1
+    ##   2     1     1  1     2     1  1     1
+    ##   3     1     1  1     2     1  1     1
+
+``` r
+# as you can see now, people have 2 values at 33.33 - we can take the average here
+common_three_sac <- common_three_sac[ , .(correct = mean(correct)),
+                                      by = .(fixreplay, common_subj_id, stim_dur_ms, stim_dur_ms_f)]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33
+    ##   01    1     1  1     1     1  1     1
+    ##   2     1     1  1     1     1  1     1
+    ##   3     1     1  1     1     1  1     1
+
+``` r
+# replay experiments
+common_three_replay <- ISSPR_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                            stim_dur_ms < 60 &
+                                            sac_suppression_f=="filtered"] # choose condition here!
+table(common_three_replay$common_subj_id, common_three_replay$stim_dur_ms)
+```
+
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33
+    ##   01    1     1  1     1     1  1     1
+    ##   2     1     1  1     1     1  1     1
+    ##   3     1     1  1     1     1  1     1
+
+``` r
+# combine the two sets to perform an ANOVA
+common_three <- rbindlist(list(common_three_sac, common_three_replay),
+                                    fill = TRUE)
+table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixreplay)
+```
+
+    ## , ,  = Replay (Exp. 4)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    1     1  1     1     1  1     1     0  0
+    ##   2     1     1  1     1     1  1     1     0  0
+    ##   3     1     1  1     1     1  1     1     0  0
+    ## 
+    ## , ,  = Saccade (Exp. 1&2)
+    ## 
+    ##     
+    ##      8.33 16.67 25 33.33 41.67 50 58.33 66.67 75
+    ##   01    1     1  1     1     1  1     1     0  0
+    ##   2     1     1  1     1     1  1     1     0  0
+    ##   3     1     1  1     1     1  1     1     0  0
+
+``` r
+# here I make smth wrong like above (between design); ANOVA did not work
+# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
+## perform ANOVA
+# use type 1 ANOVA, as we have too little subjects for assumption tests
+# use ANOVA once for filtered and once for unfiltered condition for thesis!
+ezANOVA(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE, type = 1)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+    ## $ANOVA
+    ##                    Effect DFn DFd        SSn         SSd          F
+    ## 1               fixreplay   1   2 0.22392813 0.004617481 96.9914637
+    ## 2           stim_dur_ms_f   6  12 0.24861769 0.041009259 12.1249542
+    ## 3 fixreplay:stim_dur_ms_f   6  12 0.01250434 0.033588006  0.7445716
+    ##              p p<.05       ges
+    ## 1 0.0101534272     * 0.7386884
+    ## 2 0.0001742628     * 0.7583682
+    ## 3 0.6248998773       0.1363330
+
+``` r
+#also take care here, if changing the condition (filtered. vs unfiltered)
+ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay), type = 1)
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: Collapsing data to cell means first using variables supplied to
+    ## "within_full", then collapsing the resulting means to means for the cells
+    ## supplied to "within".
+
+    ##            fixreplay N      Mean         SD       FLSD
+    ## 1    Replay (Exp. 4) 3 0.6669063 0.01955845 0.06380125
+    ## 2 Saccade (Exp. 1&2) 3 0.8129422 0.03740067 0.06380125
+
+``` r
+#ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        #within = .(fixreplay, stim_dur_ms_f), type = 1)
+
+# plot to evaluate ANOVA results
+allexsuppressed <- ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
+       within = .(fixreplay, stim_dur_ms_f),
+       x = .(stim_dur_ms_f), split = .(fixreplay) , bar_width=0.00001, type = 1)+scale_color_manual(values = experiment_colorscale)+ labs(y = "Proportion scene correctly matched")+
+    labs(x = "Display Duration [ms]",
+      color = "Task",
+       linetype = "Task",
+       shape = "Task", 
+       title = "All Experiment-Participants 'Suppressed'"
+  ) +
+  geom_hline(yintercept = 0.5, linetype = "dotted") + 
+  scale_linetype_manual(values = c("solid", "dashed")) + 
+  scale_shape_manual(values = c(15, 17)) +
+  theme_classic(base_size = 12) + ocimTheme() +
+  coord_cartesian(ylim = c(0.45, 1)) +
+  scale_color_manual(values = c(experiment_colorscale[2], experiment_colorscale[1]), 
+                     guide = guide_legend(reverse = TRUE))
+```
+
+    ## Warning: Converting "common_subj_id" to factor for ANOVA.
+
+    ## Warning: Converting "fixreplay" to factor for ANOVA.
+
+    ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
+    ## Refactoring for ANOVA.
+
+    ## Scale for colour is already present.
+    ## Adding another scale for colour, which will replace the existing scale.
+
+``` r
+allexsuppressed
+```
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-25-1.svg)<!-- --> Here I
+wanna grid the Plots; six total for the different conditions
+
+``` r
+totalplot <- plot_grid(matchedoriginal, matchedsuppressed, unmatchedoriginalplot, unmatchedsuppressedplot, allexporiginal, allexsuppressed, #legend.position="none",
+                                         nrow = 3, align = "hv", axis = "tblr")
+totalplot
+```
+
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-26-1.svg)<!-- -->
+
+``` r
+#ggsave("C:/Users/dreid/OneDrive/Dokumente/Masterarbeit/totalplot.pdf", totalplot, width = 28, height = 22, units = "cm", dpi = 300)
+```
+
+Here I preparing for “proportion correct” by subject (N=20)
 
 ``` r
 ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
@@ -1821,7 +2313,7 @@ p_prop_correct_subj_replay <- ggplot(data = prop_correct_subj_replay,
 p_prop_correct_subj_replay
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-24-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-28-1.svg)<!-- -->
 
 Here we will run the ezANOVA 1 for proportion correct
 
@@ -1834,6 +2326,29 @@ anov_prop_replay <- ezANOVA(data = prop_correct_subj_replay, dv =.(prop_correct)
                      within=.(sac_suppression_f,stim_dur),
                      detailed = TRUE)
 
+ezStats(data = prop_correct_subj_replay, wid = .(subj_id.x), dv = .(prop_correct),
+within_full = .(sac_suppression_f, stim_dur), within = .(stim_dur), diff = .(sac_suppression_f))
+```
+
+    ## Warning: Collapsing data to cell means first using variables supplied to
+    ## "within_full", then collapsing the resulting means to means for the cells
+    ## supplied to "within".
+
+    ## Warning: Collapsing "sac_suppression_f" to a difference score
+    ## ("suppressed"-"original") prior to computing statistics.
+
+    ##           stim_dur  N        Mean         SD       FLSD
+    ## 1 8.33333333333333 20 -0.15855715 0.07513961 0.03921658
+    ## 2 16.6666666666667 20 -0.12686091 0.07570274 0.03921658
+    ## 3               25 20 -0.10193288 0.06488389 0.03921658
+    ## 4 33.3333333333333 20 -0.11686516 0.05391946 0.03921658
+    ## 5 41.6666666666667 20 -0.10086104 0.06467112 0.03921658
+    ## 6               50 20 -0.09175707 0.06336156 0.03921658
+    ## 7 58.3333333333333 20 -0.07755922 0.06539272 0.03921658
+    ## 8 66.6666666666667 20 -0.04968167 0.05565314 0.03921658
+    ## 9               75 20 -0.03968394 0.04614657 0.03921658
+
+``` r
 ezStats(data = prop_correct_subj_replay, wid = .(subj_id.x), dv = .(prop_correct),
         within_full = .(sac_suppression_f, stim_dur), within = .(sac_suppression_f))
 ```
@@ -1965,7 +2480,7 @@ do that easily by updating the levels(mydata\$sac_suppression_f), see
 below.
 
 ``` r
-#levels(p_correct_replay_latency$sac_suppression_f) <- c("original", "suppressed") # or something else?
+levels(p_correct_replay_latency$sac_suppression_f) <- c("original", "suppressed") # or something else?
 
 prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency,
                            aes(x = replay_sac_display_off_latency, y = P_mean,
@@ -1973,10 +2488,10 @@ prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency,
   geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +  # vertikale Linie bei 0
   geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) +  # horizontale Linie bei 0.5
   geom_errorbar(aes(ymax = P_mean + MC_se, ymin = P_mean - MC_se),
-                width = 0, size = 1, alpha = 0.5) +  # Fehlerbalken für y
+                width = 0, size = 1.5, alpha = 1) +  # Fehlerbalken für y
   geom_errorbarh(aes(xmax = replay_sac_display_off_latency + MC_se,
                      xmin = replay_sac_display_off_latency - MC_se),
-                 height = 0, size = 1, alpha = 0.5) +  # Fehlerbalken für x
+                 height = 0, size = 1.5, alpha = 1) +  # Fehlerbalken für x
   geom_line(size = 1.5, alpha = 0.8) +  # Linie für Mittelwerte
   geom_point(size = 2.5) +  # Punkte für Mittelwerte
   theme_classic(base_size = 12.5) + ocimTheme() +  # klassisches Theme
@@ -1992,7 +2507,7 @@ prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency,
 prop_replay_latency_plot
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-28-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-32-1.svg)<!-- -->
 
 Here I wanna do a ezANOVA for prop_correct_subj_replay_latency
 
@@ -2092,7 +2607,7 @@ p_sac_dur <- ggplot(data = ISSP_mean_sac,
 p_sac_dur
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-31-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-35-1.svg)<!-- -->
 
 ``` r
 ezStats(data = ISSP_mean_sac_subj[experiment_f=="1"],
@@ -2120,6 +2635,7 @@ ezStats(data = ISSP_mean_sac_subj[experiment_f=="2"],
 
     ## Warning: You have removed one or more Ss from the analysis. Refactoring
     ## "subj_id" for ANOVA.
+
     ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
     ## Refactoring for ANOVA.
 
@@ -2156,7 +2672,7 @@ p_sac_vpeak <- ggplot(data = ISSP_mean_sac,
 p_sac_vpeak
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-32-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-36-1.svg)<!-- -->
 
 ``` r
 ezStats(data = ISSP_mean_sac_subj[experiment_f=="1"],
@@ -2184,6 +2700,7 @@ ezStats(data = ISSP_mean_sac_subj[experiment_f=="2"],
 
     ## Warning: You have removed one or more Ss from the analysis. Refactoring
     ## "subj_id" for ANOVA.
+
     ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
     ## Refactoring for ANOVA.
 
@@ -2220,7 +2737,7 @@ p_sac_amp <- ggplot(data = ISSP_mean_sac,
 p_sac_amp
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-33-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-37-1.svg)<!-- -->
 
 ``` r
 ezStats(data = ISSP_mean_sac_subj[experiment_f=="1"],
@@ -2248,6 +2765,7 @@ ezStats(data = ISSP_mean_sac_subj[experiment_f=="2"],
 
     ## Warning: You have removed one or more Ss from the analysis. Refactoring
     ## "subj_id" for ANOVA.
+
     ## Warning: You have removed one or more levels from variable "stim_dur_ms_f".
     ## Refactoring for ANOVA.
 
@@ -2282,7 +2800,7 @@ p_histo12 <- ggplot(data = issp %>% filter(experiment %in% c(1, 2)), aes(x = sac
 p_histo12
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-34-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-38-1.svg)<!-- -->
 
 Here I wanna do the frequency plot for the mean distribution of all
 samples and observers for replay no vari. times for all observers, no
@@ -2301,24 +2819,27 @@ Also, the plot is basically the one from the manuscript and I’m not sure
 whether that’s a good idea with Martin and Sven as your referees.
 
 ``` r
-plot_freq <- ggplot(data = ISSPR_data_without_overlap_metrics,
+plot_freq <- ggplot(data = ISSPR_data_without_overlap_metrics %>%
+                      filter(experiment == 4),  # Zeige nur das Replay-Experiment
                     aes(x = replay_sac_display_off_latency,
-                        color = factor(experiment), group = paste(stim_dur_ms_f, experiment),
-                                               alpha = stim_dur_ms_f)) +
-  geom_hline(aes(color = factor(experiment), yintercept = 0), size = 2) +
+                        color = factor(stim_dur_ms_f),  # Farbe für Display-Dauer
+                        group = stim_dur_ms_f)) +
+  geom_hline(yintercept = 0, size = 2, color = "gray60") +
   geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +
   geom_freqpoly(binwidth = 4, size = 1.5) +
   coord_cartesian(expand = FALSE, xlim = c(-70, 60)) +
-  scale_color_manual(values = experiment_colorscale,  labels = c("4" = "Replay"))+
-  scale_fill_manual(values = experiment_colorscale,  labels = c("4" = "Replay")) +
-  labs(x = "Display offset re saccade offset [ms]", y = "Frequency",
-       fill = "Observers", color = "Observers") +
-  theme_minimal(base_size = 15)
+  scale_color_viridis_d(name = "Display\nduration [ms]") +  # Farbskala
+  labs(x = "Display offset re saccade offset [ms]",
+       y = "Number of trials") +
+  theme_minimal(base_size = 15) +
+  ocimTheme() +
+  theme(plot.margin = margin(t = 10, r = 10, b = 10, l = 10),
+        legend.box.margin = margin(5, 5, 5, 5))
 
 plot_freq
 ```
 
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-35-1.svg)<!-- -->
+![](ISSPR_MD_files/figure-gfm/unnamed-chunk-39-1.svg)<!-- -->
 
 Here I wanna make predictions of saccade data related to replay
 (within-subject); how strong are the datapoints related to each other?
@@ -2351,283 +2872,3 @@ still have time.
 # 
 # rmcorr_ISSPR
 ```
-
-Here this is not needed for the master thesis Here we will create BINS
-for the latency
-
-``` r
-ISSPR_data_without_overlap_metrics[, sac_display_off_latency_bins := cut_number(replay_sac_display_off_latency, n=4)]
-
-
-prop_correct_subj_bins_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
-                                by = .(subj_id.x, sac_suppression_f, sac_display_off_latency_bins)][order(subj_id.x, sac_suppression_f, sac_display_off_latency_bins)]
-
-
-prop_correct_subj_bins_replay$sac_suppression_f <- ordered(prop_correct_subj_bins_replay$sac_suppression_f)
-```
-
-Here we will create the Plot for BINS
-
-``` r
-p_prop_correct_subj_bins_replay <- ggplot(data = prop_correct_subj_bins_replay,
-                                   aes(x = sac_display_off_latency_bins, y = prop_correct,
-                                       color = sac_suppression_f, group = sac_suppression_f)) +
-  geom_point() + geom_line() +
-  theme_classic() +
-  labs(x = "Display offset re simulated saccade offset", y = "Proportion correct",
-       color = "Simulated suppression") +
-  facet_wrap(~subj_id.x)
-
-p_prop_correct_subj_bins_replay
-```
-
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-38-1.svg)<!-- --> Here we
-will have the ezANOVA 2 for the BINS
-
-``` r
-prop_correct_subj_bins_replay$subj_id.x <- factor(prop_correct_subj_bins_replay$subj_id.x)
-anov_prop_bins_replay <- ezANOVA(data = prop_correct_subj_bins_replay, dv =prop_correct, wid = subj_id.x,
-                          within=.(sac_suppression_f,sac_display_off_latency_bins),
-                          detailed = TRUE)
-
-anov_prop_bins_replay
-```
-
-    ## $ANOVA
-    ##                                           Effect DFn DFd         SSn        SSd
-    ## 1                                    (Intercept)   1  19 80.40031463 0.69189558
-    ## 2                              sac_suppression_f   1  19  0.38384850 0.02036182
-    ## 3                   sac_display_off_latency_bins   3  57  1.84188337 0.06507936
-    ## 4 sac_suppression_f:sac_display_off_latency_bins   3  57  0.02590492 0.07715523
-    ##             F            p p<.05        ges
-    ## 1 2207.856246 4.014374e-21     * 0.98948380
-    ## 2  358.176257 8.669066e-14     * 0.30997008
-    ## 3  537.740175 9.367536e-42     * 0.68309606
-    ## 4    6.379263 8.375004e-04     * 0.02942414
-    ## 
-    ## $`Mauchly's Test for Sphericity`
-    ##                                           Effect         W          p p<.05
-    ## 3                   sac_display_off_latency_bins 0.4355546 0.01172588     *
-    ## 4 sac_suppression_f:sac_display_off_latency_bins 0.6784405 0.23075778      
-    ## 
-    ## $`Sphericity Corrections`
-    ##                                           Effect       GGe        p[GG]
-    ## 3                   sac_display_off_latency_bins 0.6716641 8.539675e-29
-    ## 4 sac_suppression_f:sac_display_off_latency_bins 0.8348422 1.829541e-03
-    ##   p[GG]<.05       HFe        p[HF] p[HF]<.05
-    ## 3         * 0.7516402 5.918100e-32         *
-    ## 4         * 0.9717925 9.566222e-04         *
-
-Morey Korrektur incl Cousineau for BINS
-
-``` r
-prop_correct_subj_bins_replay[, ID_mean := mean(prop_correct), by =.(subj_id.x)]
-prop_correct_subj_bins_replay[, overall_mean := mean(prop_correct),]
-prop_correct_subj_bins_replay[, p_mean := (prop_correct - ID_mean + overall_mean),]
-
-p_correct_bins_replay <- prop_correct_subj_bins_replay[,
-                                         .(P_mean = mean(prop_correct), CP_mean = mean(p_mean),  C_SD = sd(p_mean),
-                                           C_SE = (sd(p_mean)/sqrt(length(p_mean))), N = length(p_mean)),
-                                         keyby= .(sac_suppression_f, sac_display_off_latency_bins)]
-
-
-
-# SD und Abweichung
-prop_correct_subj_bins_replay[, prop_SE := (sd(prop_correct)/sqrt(length(prop_correct))), by =.(subj_id.x, sac_suppression_f)]
-prop_correct_subj_bins_replay[, prop_SD := sd(prop_correct), by =.(subj_id.x, sac_suppression_f)]
-
-
-n_conditions_bins <- length(unique(p_correct_bins_replay$sac_suppression_f))*length(unique(p_correct_bins_replay$sac_display_off_latency_bins))
-p_correct_bins_replay[, MC_se := C_SE*(n_conditions_bins/(n_conditions_bins-1))]
-```
-
-Second Plot for BINS
-
-``` r
-prop_bins_replay <- ggplot(data = p_correct_bins_replay,
-                 aes(x = sac_display_off_latency_bins,
-                     y = P_mean,
-                     color = sac_suppression_f, fill = sac_suppression_f, group = sac_suppression_f)) +
-
-  geom_hline(yintercept = 0.5,linetype='dashed')+
-  geom_line(size = 1.5, alpha = 0.8) +
-  geom_point(alpha = 0.8, size = 3) +
-  geom_ribbon(aes(ymin = P_mean - MC_se,
-                  ymax = P_mean + MC_se), color = NA, alpha = 0.3) +
-  scale_y_continuous(expand=c(0,0),limits=c(0.45,1))+
-  scale_fill_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
-  theme_classic(base_size = 15) + ocimTheme() +
-  labs(x = "Display offset re simulated saccade offset",y = "Proportion correct",
-       fill = "Image type", color = "Image type") +
-  theme(legend.position = "right")
-
-prop_bins_replay
-```
-
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-41-1.svg)<!-- --> Here we
-will run some other des. statistics
-
-``` r
-ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
-        dv = .(replay_sac_display_latency), wid = .(subj_id.x),
-        within = .(stim_dur) )
-```
-
-    ## Warning: Converting "subj_id.x" to factor for ANOVA.
-
-    ## Warning: "stim_dur" will be treated as numeric.
-
-    ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may
-    ## be inaccurate.
-
-    ## Warning: There is at least one numeric within variable, therefore aov() will be
-    ## used for computation and no assumption checks will be obtained.
-
-    ##    stim_dur  N     Mean        SD      FLSD
-    ## 1  8.333333 20 8.845138 0.1726913 0.1233542
-    ## 2 16.666667 20 8.937816 0.1397880 0.1233542
-    ## 3 25.000000 20 8.869960 0.1663857 0.1233542
-    ## 4 33.333333 20 9.060644 0.2405516 0.1233542
-    ## 5 41.666667 20 9.321213 0.2206385 0.1233542
-    ## 6 50.000000 20 9.310555 0.1593640 0.1233542
-    ## 7 58.333333 20 9.252517 0.2083374 0.1233542
-    ## 8 66.666667 20 9.197438 0.2020838 0.1233542
-    ## 9 75.000000 20 9.277307 0.1485654 0.1233542
-
-``` r
-ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
-        dv = .(replay_sac_dur), wid = .(subj_id.x),
-        within = .(stim_dur) )
-```
-
-    ## Warning: Converting "subj_id.x" to factor for ANOVA.
-
-    ## Warning: "stim_dur" will be treated as numeric.
-
-    ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may
-    ## be inaccurate.
-
-    ## Warning: There is at least one numeric within variable, therefore aov() will be
-    ## used for computation and no assumption checks will be obtained.
-
-    ##    stim_dur  N     Mean        SD      FLSD
-    ## 1  8.333333 20 59.94793 0.8543478 0.7995613
-    ## 2 16.666667 20 61.90245 0.7700641 0.7995613
-    ## 3 25.000000 20 63.83004 1.2932527 0.7995613
-    ## 4 33.333333 20 62.03077 1.0490223 0.7995613
-    ## 5 41.666667 20 61.88801 0.7538052 0.7995613
-    ## 6 50.000000 20 60.07350 1.2177499 0.7995613
-    ## 7 58.333333 20 61.18590 1.0949111 0.7995613
-    ## 8 66.666667 20 60.58549 1.0407147 0.7995613
-    ## 9 75.000000 20 59.89003 1.0427160 0.7995613
-
-``` r
-anov_replay_sac_dur <- ezANOVA(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
-        dv = .(replay_sac_dur), wid = .(subj_id.x),
-        within = .(stim_dur), detailed = TRUE)
-```
-
-    ## Warning: Converting "subj_id.x" to factor for ANOVA.
-
-    ## Warning: "stim_dur" will be treated as numeric.
-
-    ## Warning: Collapsing data to cell means. *IF* the requested effects are a subset
-    ## of the full design, you must use the "within_full" argument, else results may
-    ## be inaccurate.
-
-    ## Warning: There is at least one numeric within variable, therefore aov() will be
-    ## used for computation and no assumption checks will be obtained.
-
-Here we will figure out the effect of suppression and the task
-
-``` r
-ISSPR_suppression_correct <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct),
-                                               replay_sac_display_off_latency = mean(replay_sac_display_off_latency)),
-                            by = .(subj_id.x, sac_suppression_f, stim_dur)]
-
-
-ISSPR_suppression_correct [ , stim_dur := ordered(stim_dur)]
-
-#Morey Korrektur incl Cousineau für suppression and task
-ISSPR_suppression_correct[, ID_mean := mean(prop_correct), by =.(subj_id.x)]
-ISSPR_suppression_correct[, overall_mean := mean(prop_correct),]
-ISSPR_suppression_correct[, p_mean := (prop_correct - ID_mean + overall_mean),]
-
-p_correct_suppression <- ISSPR_suppression_correct[,
-                                                       .(P_mean = mean(prop_correct), CP_mean = mean(p_mean),  C_SD = sd(p_mean),
-                                                         C_SE = (sd(p_mean)/sqrt(length(p_mean))), N = length(p_mean)),
-                                                       keyby= .(sac_suppression_f, replay_sac_display_off_latency)]
-
-
-
-# SD und Abweichung
-ISSPR_suppression_correct[, prop_SE := (sd(prop_correct)/sqrt(length(prop_correct))), by =.(subj_id.x, sac_suppression_f)]
-ISSPR_suppression_correct[, prop_SD := sd(prop_correct), by =.(subj_id.x, sac_suppression_f)]
-
-
-n_conditions_supp <- length(unique(p_correct_suppression$sac_suppression_f))*length(unique(p_correct_suppression$replay_sac_display_off_latency))
-p_correct_suppression[, MC_se := C_SE*(n_conditions_supp/(n_conditions_supp-1))]
-```
-
-Here we will have two dimensions (saccade duration and saccade
-amplitude) for each subject by mean
-
-``` r
-ISSPR_data_without_overlap_metrics[, sac_amp_n := cut_number(sac_amp, n=10)]
-ISSPR_data_without_overlap_metrics[, sac_dur_bins := cut_number(sac_dur, n=2)]
-table(ISSPR_data_without_overlap_metrics$subj_id.x,
-      ISSPR_data_without_overlap_metrics$sac_dur_bins)
-```
-
-    ##     
-    ##      [22,60] (60,102]
-    ##   08     792      774
-    ##   11     809      796
-    ##   12     800      783
-    ##   13     789      774
-    ##   15     790      821
-    ##   16     793      792
-    ##   17     775      748
-    ##   18     797      777
-    ##   19     792      779
-    ##   20     803      783
-    ##   21     845      758
-    ##   22     808      771
-    ##   P1     833      774
-    ##   P2     815      792
-    ##   P3     726      743
-    ##   P4     837      758
-    ##   P5     785      766
-    ##   P6     815      785
-    ##   P7     821      773
-    ##   P9     773      772
-
-``` r
-metrics_subj_bins_replay_dur <- ISSPR_data_without_overlap_metrics[ , .(sac_dur_f = mean(sac_dur),
-                                                                        disp_off_re_sac_off = mean(replay_sac_display_off_latency),
-                                                                        correct = mean(correct)),
-                                                                by = .(subj_id.x, sac_dur_bins, stim_dur)]
-metrics_subj_bins_replay_dur[ , sac_dur_f2 := mean(sac_dur_f), by = .(subj_id.x, sac_dur_bins)]
-```
-
-Here is the plot of sac_dur and sac_amp
-
-``` r
-ggplot(data = metrics_subj_bins_replay_dur,
-       aes(x = disp_off_re_sac_off,
-           #x = as.numeric(stim_dur),
-           y = correct,
-           color = sac_dur_f, group = sac_dur_f2 )) +
-  geom_hline(yintercept = 0.5, linetype = "dotted") +
-  geom_vline(xintercept = 0, linetype = "dotted") +
-  geom_point() + geom_line() +
-  theme_classic() +
-  labs(x = "Display offset re saccade offset", y = "Proportion correct",
-       color = "Sacc. duration") +
-  facet_wrap(~subj_id.x)
-```
-
-![](ISSPR_MD_files/figure-gfm/unnamed-chunk-45-1.svg)<!-- -->

@@ -62,6 +62,7 @@ library(quickpsy)
 library(scales)
 library (tidyr)
 library(gridExtra)
+library(cowplot)
 ```
 
 Some important basics before running main parts
@@ -653,8 +654,6 @@ matchedoriginal
 ```
 
 
-
-
 Subj. not in both conditions; between (bw) design N=11; no-common subjects!
 "Original condition"
 ```{r}
@@ -838,6 +837,8 @@ ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
 #ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
         #within = .(fixreplay, stim_dur_ms_f), type = 1)
 
+
+
 # plot to evaluate ANOVA results
 allexporiginal <- ezPlot(data = common_three, wid = .(common_subj_id), dv = .(correct),
        within = .(fixreplay, stim_dur_ms_f),
@@ -859,6 +860,44 @@ allexporiginal <- ezPlot(data = common_three, wid = .(common_subj_id), dv = .(co
 
 allexporiginal 
 
+```
+
+Here I use stim_dur_ms < 35 instead of stim_dur_ms < 60; then significant effect vanishes, suggesting that it's the longer display durations that make this difference. 'ORIGINAL' 
+```{r}
+# saccade experiments
+common_three_sac <- issp12_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                          stim_dur_ms < 35]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+# as you can see now, people have 2 values at 33.33 - we can take the average here
+common_three_sac <- common_three_sac[ , .(correct = mean(correct)),
+                                      by = .(fixreplay, common_subj_id, stim_dur_ms, stim_dur_ms_f)]
+table(common_three_sac$common_subj_id, common_three_sac$stim_dur_ms)
+
+# replay experiments
+common_three_replay <- ISSPR_prop_correct[(common_subj_id=="01" | common_subj_id=="2" | common_subj_id=="3") &
+                                            stim_dur_ms < 35 &
+                                            sac_suppression_f=="unfiltered"] # choose condition here!
+table(common_three_replay$common_subj_id, common_three_replay$stim_dur_ms)
+
+# combine the two sets to perform an ANOVA
+common_three <- rbindlist(list(common_three_sac, common_three_replay),
+                                    fill = TRUE)
+table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixreplay)
+
+# here I make smth wrong like above (between design); ANOVA did not work
+# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
+## perform ANOVA
+# use type 1 ANOVA, as we have too little subjects for assumption tests
+# use ANOVA once for filtered and once for unfiltered condition for thesis!
+ezANOVA(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        within = .(fixreplay, stim_dur_ms_f), detailed = TRUE, type = 1)
+
+#also take care here, if changing the condition (filtered. vs unfiltered)
+ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        within_full = .(fixreplay, stim_dur_ms_f), within = .(fixreplay), type = 1)
+
+#ezStats(data = common_three, wid = .(common_subj_id), dv = .(correct),
+        #within = .(fixreplay, stim_dur_ms_f), type = 1)
 ```
 
 ```{r}
@@ -924,10 +963,9 @@ totalplot <- plot_grid(matchedoriginal, matchedsuppressed, unmatchedoriginalplot
                                          nrow = 3, align = "hv", axis = "tblr")
 totalplot
 
-ggsave("C:/Users/dreid/OneDrive/Dokumente/Masterarbeit/totalplot.pdf", totalplot, width = 28, height = 22, units = "cm", dpi = 300)
+#ggsave("C:/Users/dreid/OneDrive/Dokumente/Masterarbeit/totalplot.pdf", totalplot, width = 28, height = 22, units = "cm", dpi = 300)
 ```
 
-``` 
 Here I preparing for "proportion correct" by subject (N=20)
 ```{r}
 ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
@@ -960,6 +998,9 @@ prop_correct_subj_replay$subj_id.x <- factor(prop_correct_subj_replay$subj_id.x)
 anov_prop_replay <- ezANOVA(data = prop_correct_subj_replay, dv =.(prop_correct), wid = .(subj_id.x),
                      within=.(sac_suppression_f,stim_dur),
                      detailed = TRUE)
+
+ezStats(data = prop_correct_subj_replay, wid = .(subj_id.x), dv = .(prop_correct),
+within_full = .(sac_suppression_f, stim_dur), within = .(stim_dur), diff = .(sac_suppression_f))
 
 ezStats(data = prop_correct_subj_replay, wid = .(subj_id.x), dv = .(prop_correct),
         within_full = .(sac_suppression_f, stim_dur), within = .(sac_suppression_f))
@@ -1059,10 +1100,10 @@ prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency,
   geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +  # vertikale Linie bei 0
   geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) +  # horizontale Linie bei 0.5
   geom_errorbar(aes(ymax = P_mean + MC_se, ymin = P_mean - MC_se),
-                width = 0, size = 1, alpha = 0.5) +  # Fehlerbalken für y
+                width = 0, size = 1.5, alpha = 1) +  # Fehlerbalken für y
   geom_errorbarh(aes(xmax = replay_sac_display_off_latency + MC_se,
                      xmin = replay_sac_display_off_latency - MC_se),
-                 height = 0, size = 1, alpha = 0.5) +  # Fehlerbalken für x
+                 height = 0, size = 1.5, alpha = 1) +  # Fehlerbalken für x
   geom_line(size = 1.5, alpha = 0.8) +  # Linie für Mittelwerte
   geom_point(size = 2.5) +  # Punkte für Mittelwerte
   theme_classic(base_size = 12.5) + ocimTheme() +  # klassisches Theme
@@ -1306,162 +1347,5 @@ Richard: Sorry, not sure I understand. You want to correlate proportion correct 
 ```
 
 
-Here this is not needed for the master thesis
-Here we will create BINS for the latency
-```{r}
-ISSPR_data_without_overlap_metrics[, sac_display_off_latency_bins := cut_number(replay_sac_display_off_latency, n=4)]
 
 
-prop_correct_subj_bins_replay <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct)),
-                                by = .(subj_id.x, sac_suppression_f, sac_display_off_latency_bins)][order(subj_id.x, sac_suppression_f, sac_display_off_latency_bins)]
-
-
-prop_correct_subj_bins_replay$sac_suppression_f <- ordered(prop_correct_subj_bins_replay$sac_suppression_f)
-```
-Here we will create the Plot for BINS
-```{r}
-p_prop_correct_subj_bins_replay <- ggplot(data = prop_correct_subj_bins_replay,
-                                   aes(x = sac_display_off_latency_bins, y = prop_correct,
-                                       color = sac_suppression_f, group = sac_suppression_f)) +
-  geom_point() + geom_line() +
-  theme_classic() +
-  labs(x = "Display offset re simulated saccade offset", y = "Proportion correct",
-       color = "Simulated suppression") +
-  facet_wrap(~subj_id.x)
-
-p_prop_correct_subj_bins_replay
-
-```
-Here we will have the ezANOVA 2 for the BINS
-```{r}
-prop_correct_subj_bins_replay$subj_id.x <- factor(prop_correct_subj_bins_replay$subj_id.x)
-anov_prop_bins_replay <- ezANOVA(data = prop_correct_subj_bins_replay, dv =prop_correct, wid = subj_id.x,
-                          within=.(sac_suppression_f,sac_display_off_latency_bins),
-                          detailed = TRUE)
-
-anov_prop_bins_replay
-```
-
-Morey Korrektur incl Cousineau for BINS
-```{r}
-prop_correct_subj_bins_replay[, ID_mean := mean(prop_correct), by =.(subj_id.x)]
-prop_correct_subj_bins_replay[, overall_mean := mean(prop_correct),]
-prop_correct_subj_bins_replay[, p_mean := (prop_correct - ID_mean + overall_mean),]
-
-p_correct_bins_replay <- prop_correct_subj_bins_replay[,
-                                         .(P_mean = mean(prop_correct), CP_mean = mean(p_mean),  C_SD = sd(p_mean),
-                                           C_SE = (sd(p_mean)/sqrt(length(p_mean))), N = length(p_mean)),
-                                         keyby= .(sac_suppression_f, sac_display_off_latency_bins)]
-
-
-
-# SD und Abweichung
-prop_correct_subj_bins_replay[, prop_SE := (sd(prop_correct)/sqrt(length(prop_correct))), by =.(subj_id.x, sac_suppression_f)]
-prop_correct_subj_bins_replay[, prop_SD := sd(prop_correct), by =.(subj_id.x, sac_suppression_f)]
-
-
-n_conditions_bins <- length(unique(p_correct_bins_replay$sac_suppression_f))*length(unique(p_correct_bins_replay$sac_display_off_latency_bins))
-p_correct_bins_replay[, MC_se := C_SE*(n_conditions_bins/(n_conditions_bins-1))]
-
-```
-Second Plot for BINS
-```{r,warning=FALSE}
-prop_bins_replay <- ggplot(data = p_correct_bins_replay,
-                 aes(x = sac_display_off_latency_bins,
-                     y = P_mean,
-                     color = sac_suppression_f, fill = sac_suppression_f, group = sac_suppression_f)) +
-
-  geom_hline(yintercept = 0.5,linetype='dashed')+
-  geom_line(size = 1.5, alpha = 0.8) +
-  geom_point(alpha = 0.8, size = 3) +
-  geom_ribbon(aes(ymin = P_mean - MC_se,
-                  ymax = P_mean + MC_se), color = NA, alpha = 0.3) +
-  scale_y_continuous(expand=c(0,0),limits=c(0.45,1))+
-  scale_fill_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
-  scale_color_viridis_d(option = "cividis", end = 0.4, direction = -1, guide = guide_legend(reverse = TRUE)) +
-  theme_classic(base_size = 15) + ocimTheme() +
-  labs(x = "Display offset re simulated saccade offset",y = "Proportion correct",
-       fill = "Image type", color = "Image type") +
-  theme(legend.position = "right")
-
-prop_bins_replay
-
-
-```
-Here we will run some other des. statistics
-```{r}
-ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
-        dv = .(replay_sac_display_latency), wid = .(subj_id.x),
-        within = .(stim_dur) )
-
-
-ezStats(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
-        dv = .(replay_sac_dur), wid = .(subj_id.x),
-        within = .(stim_dur) )
-
-anov_replay_sac_dur <- ezANOVA(data = ISSPR_data_without_overlap_metrics[experiment=="4"],
-        dv = .(replay_sac_dur), wid = .(subj_id.x),
-        within = .(stim_dur), detailed = TRUE)
-
-```
-Here we will figure out the effect of suppression and the task
-```{r}
-ISSPR_suppression_correct <- ISSPR_data_without_overlap_metrics[ , .(prop_correct = mean(correct),
-                                               replay_sac_display_off_latency = mean(replay_sac_display_off_latency)),
-                            by = .(subj_id.x, sac_suppression_f, stim_dur)]
-
-
-ISSPR_suppression_correct [ , stim_dur := ordered(stim_dur)]
-
-#Morey Korrektur incl Cousineau für suppression and task
-ISSPR_suppression_correct[, ID_mean := mean(prop_correct), by =.(subj_id.x)]
-ISSPR_suppression_correct[, overall_mean := mean(prop_correct),]
-ISSPR_suppression_correct[, p_mean := (prop_correct - ID_mean + overall_mean),]
-
-p_correct_suppression <- ISSPR_suppression_correct[,
-                                                       .(P_mean = mean(prop_correct), CP_mean = mean(p_mean),  C_SD = sd(p_mean),
-                                                         C_SE = (sd(p_mean)/sqrt(length(p_mean))), N = length(p_mean)),
-                                                       keyby= .(sac_suppression_f, replay_sac_display_off_latency)]
-
-
-
-# SD und Abweichung
-ISSPR_suppression_correct[, prop_SE := (sd(prop_correct)/sqrt(length(prop_correct))), by =.(subj_id.x, sac_suppression_f)]
-ISSPR_suppression_correct[, prop_SD := sd(prop_correct), by =.(subj_id.x, sac_suppression_f)]
-
-
-n_conditions_supp <- length(unique(p_correct_suppression$sac_suppression_f))*length(unique(p_correct_suppression$replay_sac_display_off_latency))
-p_correct_suppression[, MC_se := C_SE*(n_conditions_supp/(n_conditions_supp-1))]
-```
-
-
-Here we will have two dimensions (saccade duration and saccade amplitude) for each subject
-by mean
-```{r}
-ISSPR_data_without_overlap_metrics[, sac_amp_n := cut_number(sac_amp, n=10)]
-ISSPR_data_without_overlap_metrics[, sac_dur_bins := cut_number(sac_dur, n=2)]
-table(ISSPR_data_without_overlap_metrics$subj_id.x,
-      ISSPR_data_without_overlap_metrics$sac_dur_bins)
-
-metrics_subj_bins_replay_dur <- ISSPR_data_without_overlap_metrics[ , .(sac_dur_f = mean(sac_dur),
-                                                                        disp_off_re_sac_off = mean(replay_sac_display_off_latency),
-                                                                        correct = mean(correct)),
-                                                                by = .(subj_id.x, sac_dur_bins, stim_dur)]
-metrics_subj_bins_replay_dur[ , sac_dur_f2 := mean(sac_dur_f), by = .(subj_id.x, sac_dur_bins)]
-```
-Here is the plot of sac_dur and sac_amp
-```{r}
-ggplot(data = metrics_subj_bins_replay_dur,
-       aes(x = disp_off_re_sac_off,
-           #x = as.numeric(stim_dur),
-           y = correct,
-           color = sac_dur_f, group = sac_dur_f2 )) +
-  geom_hline(yintercept = 0.5, linetype = "dotted") +
-  geom_vline(xintercept = 0, linetype = "dotted") +
-  geom_point() + geom_line() +
-  theme_classic() +
-  labs(x = "Display offset re saccade offset", y = "Proportion correct",
-       color = "Sacc. duration") +
-  facet_wrap(~subj_id.x)
-
-```
