@@ -254,7 +254,7 @@ issp12_prop_correct_agg <- issp12_prop_correct[ ,
 
 Here we create the Plot for Prop. Correct; ISSP 1&2 and Common_subj_id
 
-Richard: Note the command to determine figure width and height in markdown.
+Note the command to determine figure width and height in markdown.
 ```{r, fig.width=15, fig.height=7}
 # this is for individual subjects, only those that have a common_subj_id (N=9):
 p_issp12_prop_subj <- ggplot(data = issp12_prop_correct[common_subj_id != "all others"],
@@ -348,10 +348,6 @@ ISSPR_prop_correct_agg
 ```
 
 Here we create the Plot for Prop. Correct; ISSP Replay and common_subj_id
-
-Mara Comment: Here is the same problem; the legend changed when Iam using (scale_color_manual(values = experiment_colorscale)), what is the mistake here?
-
-Richard Response: Not sure what you mean. You did not use the command above but a different one (commented below), so I would not be surprised to see the color code change... it should be fixed now.
 
 ```{r, fig.width=15, fig.height=7}
 ISSPR_prop_subj <- ggplot(data = ISSPR_prop_correct[common_subj_id != "all others"],
@@ -1284,33 +1280,6 @@ plot_freq <- ggplot(data = ISSPR_data_without_overlap_metrics %>%
         legend.box.margin = margin(5, 5, 5, 5))
 
 plot_freq
-```
-
-Here I wanna make predictions of saccade data related to replay (within-subject); how strong are the datapoints related to each other?
-
-Mara Comment: Need help here pls
-
-Richard: Sorry, not sure I understand. You want to correlate proportion correct in the saccade exp and proportion correct in the replay exp, matched by condition? I guess I could write this code for you (which is not the goal), but as this is exploratory and you still have other stuff to do, I'd suggest we postpone this and work on this together if you still have time. 
-
-```{r}
-
-# 
-# lmer(replay_sac_display_off_latency ~ sac_display_off_latency + (1 | common_subj_id), data = subset_ISSPexperiments)
-# 
-# #other option Pearson correlation
-# pearson_ISSPR <- cor.test(subset_ISSPexperiments$sac_display_off_latency,
-#                              subset_ISSPexperiments$replay_sac_display_off_latency,
-#                              method = "pearson")
-# pearson_ISSPR
-# 
-# #repeated measures Korrelation
-# #library(rmcorr)
-# #rmcorr_ISSPR <- rmcorr(participant = common_subj_id,
-#                        # measure1 = sac_display_off_latency,
-#                        # measure2 = replay_sac_display_off_latency,
-#                        # data = subset_ISSPexperiments)
-# 
-# rmcorr_ISSPR
 ```
 
 
