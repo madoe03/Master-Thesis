@@ -148,7 +148,7 @@ Here we load the data from Experiment 1-3
 #load("~/Masterarbeit/ISSPR R Studio/ISSP_cleaned_data (1).rda")
 #View(issp)
 
-# Richard:
+
 # To make sure that I and other people can run this script, it is important to only use file paths that are synced via Git.
 # In other words, you should put this file in the project directory, so that it can be pushed to Github.
 # Of course, the file 'ISSP_cleaned_data.rda' is huge (~1.4 GB), because it contains all the raw samples, and it should not be on Github.
@@ -295,8 +295,7 @@ Here we start with the common_subj_id for Experiment 2 und Reply
 Experiment
 
 ``` r
-#### RICHARDs COMMENTS
-# Richard: Have a look at the subject codes in the replay experiment:
+#Have a look at the subject codes in the replay experiment:
 table(ISSPR_data_without_overlap_metrics$subj_id.x, useNA = "ifany")
 ```
 
@@ -323,11 +322,9 @@ table(ISSPR_data_without_overlap_metrics$subj_id.x=="2", useNA = "ifany")
        #useNA = "ifany")
 #### END
 
-###Mara COMMENTS
-# I change it here and with ur last code (checking); it looks good (I guess)
-###END
 
-#first we will have the three P. which were tested for Experiment 1 and 2; Replay
+
+#First we will have the three P. which were tested for Experiment 1 and 2; Replay
 issp[experiment==2 & subj_id=="10", common_subj_id := "01"]
 issp[experiment==1 & subj_id=="20", common_subj_id := "01"]
 ISSPR_data_without_overlap_metrics[subj_id.x=="P2", common_subj_id := "01"]
@@ -544,7 +541,7 @@ Here we start making a plot that does the same for the Replay Experiment
 (for unfiltered vs suppression)
 
 ``` r
-# RICHARD: added subj_id.x here
+#COMMENT: added subj_id.x here
 ISSPR_prop_correct <- ISSPR_data_without_overlap_metrics[experiment==4,
                              .(correct = mean(correct),
                                replay_sac_display_off_latency = mean(replay_sac_display_off_latency)),
@@ -553,7 +550,7 @@ ISSPR_prop_correct <- ISSPR_data_without_overlap_metrics[experiment==4,
 
 ISSPR_prop_correct[ , gm_correct := mean(correct), by = .(experiment)]
 ISSPR_prop_correct[ , correct.w := correct - mean(correct) + gm_correct, by = .(experiment, common_subj_id)]
-str(ISSPR_prop_correct$sac_suppression_f) # Richard: Why do you do this below? You already have the correct factor
+str(ISSPR_prop_correct$sac_suppression_f) 
 ```
 
     ##  Factor w/ 2 levels "original","suppressed": 1 1 2 2 2 2 2 2 2 2 ...
@@ -917,27 +914,7 @@ ggplot()+
 
 Here we start with statistic differences between saccade/replay
 condition First: within subject (VP (N=9) data from Exp 2 + Replay) for
-the UNFILTERED condition. Mara Comment: Would it be better to different
-here excatly that is is only Saccade (Exp. 2) in the legend?
-
-Richard Comment: Yes, saccade (Exp. 2) would certainly be more suitable.
-But I guess you can edit this manually later when you export the figure
-as svg or pdf. Furthermore, if you use ezPlot, then you should try to
-keep the style consistent to your other figures. Especially, different
-color schemes suggest that something else is plotted there. As you have
-seen below, I have tried my best to adjust the style to match the figure
-above, but line and point size is still not the same. Whatever you do in
-this chunk, please also apply to all the subsequent ezPlot commands.
-
-Ok. I tried to add the style first to all subsequent ezPlots. With the
-legend and the color Iam still unsure here.
-
-Finally, one important thing: Here you use the same color scale you use
-to compare original vs suppressed (or unfiltered vs filtered, you would
-have to decide for one way) to compare experiments! That is extremely
-confusing and should really be avoided. When you compare viewing
-conditions (saccade vs replay) you should really use a different color
-scale.
+the UNFILTERED condition.
 
 ``` r
 # okay, below we merge the data of Experiment 2 and Replay (n=9) with unfiltered condition
@@ -1154,8 +1131,7 @@ ezPlot(data = subset_ISSPexperiments, wid = .(common_subj_id), dv = .(correct),
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-18-1.svg)<!-- -->
 
 Second: within subject (VP (N=9) data from Exp 2 + Replay) for the
-FILTERED condition. Mama Comment: Same question like above; Legend
-changes?
+FILTERED condition.
 
 ``` r
 common_subj_id_subset_ISSPR_filt <- ISSPR_prop_correct[common_subj_id!="all others" &
@@ -1829,13 +1805,7 @@ unmatchedsuppressedplot
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-22-1.svg)<!-- --> Here we
 start “replay-ISSP 1& 2 -within”: N=3 mit Faktor stim_dur_ms
 (8.33-58.33, 7 levels). So who are the subjects that were tested in all
-three experiments? It’s 1-3 by the definition at the top! TO DO: do the
-above for unfiltered vs filtered conditions- change it for the two plots
-for the thesis! Mara Comment: Here I have no p\[GG\] values; also write
-it in the docs document (Final_MT)
-
-Richard: Well, yes, apparently there are too few subjects for assumption
-tests. You can state that no p\[GG\] were available and why. ORIGINAL
+three experiments? It’s 1-3 by the definition at the top!
 
 ``` r
 # saccade experiments
@@ -1901,11 +1871,9 @@ table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixr
     ##   3     1     1  1     1     1  1     1     0  0
 
 ``` r
-# here I make smth wrong like above (between design); ANOVA did not work
-# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
-## perform ANOVA
+# Experiment 1 has 3 common subjects, experiment 2 has 9. 
 # use type 1 ANOVA, as we have too little subjects for assumption tests
-# use ANOVA once for filtered and once for unfiltered condition for thesis!
+# use ANOVA once for filtered and once for unfiltered condition
 ezANOVA(data = common_three, wid = .(common_subj_id), dv = .(correct),
         within = .(fixreplay, stim_dur_ms_f), detailed = TRUE, type = 1)
 ```
@@ -2054,8 +2022,6 @@ table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixr
     ##   3     1     1  1     1     0  0     0     0  0
 
 ``` r
-# here I make smth wrong like above (between design); ANOVA did not work
-# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
 ## perform ANOVA
 # use type 1 ANOVA, as we have too little subjects for assumption tests
 # use ANOVA once for filtered and once for unfiltered condition for thesis!
@@ -2167,8 +2133,6 @@ table(common_three$common_subj_id, common_three$stim_dur_ms_f, common_three$fixr
     ##   3     1     1  1     1     1  1     1     0  0
 
 ``` r
-# here I make smth wrong like above (between design); ANOVA did not work
-# RICHARD: experiment 1 has 3 common subjects, experiment 2 has 9. That's why it did not work. See fix above
 ## perform ANOVA
 # use type 1 ANOVA, as we have too little subjects for assumption tests
 # use ANOVA once for filtered and once for unfiltered condition for thesis!
@@ -2464,23 +2428,8 @@ n_conditions <- length(unique(p_correct_replay_latency$sac_suppression_f))*lengt
 p_correct_replay_latency[, MC_se := C_SE*(n_conditions/(n_conditions-1))]
 ```
 
-Here is the first plot for proportion correct and
-replay_display_off_latency Mara comment: Here i tried to change the
-color as well (scale_color_manual(values = experiment_colorscale),
-unluckly the legend changed in a wrong way; How can I solve it? Should I
-change here suppressed= filtered; original= unfiltered, so that all
-plots have the same legend? Iam afraid that this may be confusing due to
-the other plots.
-
-Richard: Not sure what you mean by “the legend changed in a wrong way”.
-Is it the order of original/suppressed? If so, then you can use the
-guide option I used below. Generally, indeed, you want to keep the color
-scale, as well as the associated labels consistent across plots. You can
-do that easily by updating the levels(mydata\$sac_suppression_f), see
-below.
-
 ``` r
-levels(p_correct_replay_latency$sac_suppression_f) <- c("original", "suppressed") # or something else?
+levels(p_correct_replay_latency$sac_suppression_f) <- c("original", "suppressed") 
 
 prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency,
                            aes(x = replay_sac_display_off_latency, y = P_mean,
@@ -2488,10 +2437,10 @@ prop_replay_latency_plot <- ggplot(data = p_correct_replay_latency,
   geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +  # vertikale Linie bei 0
   geom_hline(yintercept = 0.5, linetype = "dotted", alpha = 0.7) +  # horizontale Linie bei 0.5
   geom_errorbar(aes(ymax = P_mean + MC_se, ymin = P_mean - MC_se),
-                width = 0, size = 1.5, alpha = 1) +  # Fehlerbalken für y
+                width = 0, size = 1, alpha = 1) +  # Fehlerbalken für y
   geom_errorbarh(aes(xmax = replay_sac_display_off_latency + MC_se,
                      xmin = replay_sac_display_off_latency - MC_se),
-                 height = 0, size = 1.5, alpha = 1) +  # Fehlerbalken für x
+                 height = 0, size = 1, alpha = 1) +  # Fehlerbalken für x
   geom_line(size = 1.5, alpha = 0.8) +  # Linie für Mittelwerte
   geom_point(size = 2.5) +  # Punkte für Mittelwerte
   theme_classic(base_size = 12.5) + ocimTheme() +  # klassisches Theme
@@ -2802,27 +2751,11 @@ p_histo12
 
 ![](ISSPR_MD_files/figure-gfm/unnamed-chunk-38-1.svg)<!-- -->
 
-Here I wanna do the frequency plot for the mean distribution of all
-samples and observers for replay no vari. times for all observers, no
-individual saccade statistics Mara Comment: False color scale and false
-plot (did I use the false data)?
-
-Richard: Well, yes, you use the wrong data, that is, the aggregated data
-(one point per condition). To compute proper histograms, you’d need the
-trial-resolved data. I’m not sure what you ultimately what to plot but I
-guess you want to replicate the plot above? I have only changed the
-basic, this plot still needs work (color scale, labels, theme etc).
-
-Again: the color scale in the plot above is the same you use to compare
-original vs suppressed. Make sure this can be visually disentangled.
-Also, the plot is basically the one from the manuscript and I’m not sure
-whether that’s a good idea with Martin and Sven as your referees.
-
 ``` r
 plot_freq <- ggplot(data = ISSPR_data_without_overlap_metrics %>%
-                      filter(experiment == 4),  # Zeige nur das Replay-Experiment
+                      filter(experiment == 4),  
                     aes(x = replay_sac_display_off_latency,
-                        color = factor(stim_dur_ms_f),  # Farbe für Display-Dauer
+                        color = factor(stim_dur_ms_f), 
                         group = stim_dur_ms_f)) +
   geom_hline(yintercept = 0, size = 2, color = "gray60") +
   geom_vline(xintercept = 0, linetype = "dotted", alpha = 0.7) +
